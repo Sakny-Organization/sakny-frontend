@@ -1,6 +1,6 @@
 # Sakny - Roommate Matching Platform
 
-A modern roommate matching platform built with React, TypeScript, and Vite.
+A modern roommate matching platform built with React, JavaScript, and Vite.
 
 ## 🚀 Quick Start
 
@@ -28,7 +28,7 @@ sakny/
 ├── styles/             # Modular CSS files
 ├── utils/              # Utility functions
 ├── data/               # Mock data
-└── types.ts            # TypeScript type definitions
+└── types.js            # TypeScript type definitions (for reference)
 ```
 
 ## 🎨 CSS Architecture
@@ -38,10 +38,9 @@ The project uses a modular CSS architecture. See `styles/README.md` for details.
 ## 🛠️ Tech Stack
 
 - **React** - UI library
-- **TypeScript** - Type safety
+- **JavaScript** - Programming language
 - **Vite** - Build tool
 - **Redux Toolkit** - State management
 - **Framer Motion** - Animations
 - **React Router** - Routing
 - **Lucide React** - Icons
-

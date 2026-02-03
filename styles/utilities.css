@@ -2,7 +2,34 @@
    Layout & Utility Classes
    ============================================ */
 
-/* Container */
+/* Centralized Layout Container - Site-wide width control */
+.site-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: var(--spacing-6);
+    padding-right: var(--spacing-6);
+}
+
+/* Wide container for full-width sections */
+.site-container-wide {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: var(--spacing-6);
+    padding-right: var(--spacing-6);
+}
+
+/* Narrow container for forms/auth pages */
+.site-container-narrow {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-left: var(--spacing-6);
+    padding-right: var(--spacing-6);
+}
+
+/* App container - used by main content wrapper */
 .app-container {
     width: 100%;
     max-width: 1400px;
@@ -11,7 +38,12 @@
     padding-right: var(--spacing-6);
 }
 
+/* Mobile responsive padding */
 @media (max-width: 768px) {
+
+    .site-container,
+    .site-container-wide,
+    .site-container-narrow,
     .app-container {
         padding-left: var(--spacing-4);
         padding-right: var(--spacing-4);
