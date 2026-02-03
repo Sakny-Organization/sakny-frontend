@@ -229,72 +229,78 @@ const ProfileSetup: React.FC = () => {
 
       case 3:
         return (
-          <div className="step-card">
-            <h2 className="step-title">Step 3. Lifestyle</h2>
+          <div className="bg-white border border-gray-200 rounded-lg p-6 lg:p-8 mb-6">
+            <h2 className="text-2xl font-bold text-black mb-2">Step 3. Lifestyle</h2>
+            <p className="text-base text-gray-600 leading-relaxed mb-6">
+              Tell us about your lifestyle to find better roommate matches.
+            </p>
 
-            <div className="form-group">
-              <label className="form-label">Smoking</label>
-              <div className="radio-group">
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-black mb-4">Smoking</label>
+              <div className="flex flex-col gap-3">
                 {['Non-smoker', 'Sometimes', 'Smoke often'].map((option) => (
-                  <label key={option} className="radio-label">
+                  <label key={option} className="flex flex-row items-center gap-3 p-4 border border-gray-200 rounded-md cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 has-[:checked]:border-black has-[:checked]:bg-gray-50 w-full">
                     <input
                       type="radio"
                       name="smoking"
                       checked={profileData.smoking === option}
                       onChange={() => setProfileData({ ...profileData, smoking: option as any })}
+                      className="w-5 h-5 m-0 cursor-pointer accent-black flex-shrink-0"
                     />
-                    <span>{option}</span>
+                    <span className="text-base text-black">{option}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Pets at home</label>
-              <div className="radio-group">
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-black mb-4">Pets at home</label>
+              <div className="flex flex-col gap-3">
                 {['No pets', 'Cats', 'Dogs'].map((option) => (
-                  <label key={option} className="radio-label">
+                  <label key={option} className="flex flex-row items-center gap-3 p-4 border border-gray-200 rounded-md cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 has-[:checked]:border-black has-[:checked]:bg-gray-50 w-full">
                     <input
                       type="radio"
                       name="pets"
                       checked={profileData.pets === option}
                       onChange={() => setProfileData({ ...profileData, pets: option as any })}
+                      className="w-5 h-5 m-0 cursor-pointer accent-black flex-shrink-0"
                     />
-                    <span>{option}</span>
+                    <span className="text-base text-black">{option}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Sleep schedule</label>
-              <div className="radio-group">
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-black mb-4">Sleep schedule</label>
+              <div className="flex flex-col gap-3">
                 {['Early sleeper', 'Flexible', 'Night owl'].map((option) => (
-                  <label key={option} className="radio-label">
+                  <label key={option} className="flex flex-row items-center gap-3 p-4 border border-gray-200 rounded-md cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 has-[:checked]:border-black has-[:checked]:bg-gray-50 w-full">
                     <input
                       type="radio"
                       name="sleepSchedule"
                       checked={profileData.sleepSchedule === option}
                       onChange={() => setProfileData({ ...profileData, sleepSchedule: option as any })}
+                      className="w-5 h-5 m-0 cursor-pointer accent-black flex-shrink-0"
                     />
-                    <span>{option}</span>
+                    <span className="text-base text-black">{option}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Cleanliness</label>
-              <div className="slider-container">
+            <div>
+              <label className="block text-sm font-semibold text-black mb-4">Cleanliness</label>
+              <div className="flex flex-col gap-4">
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={profileData.cleanliness}
                   onChange={(e) => setProfileData({ ...profileData, cleanliness: parseInt(e.target.value) })}
-                  className="slider"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
                 />
-                <div className="slider-labels">
+                <div className="flex justify-between text-xs text-gray-500">
                   <span>Messy</span>
                   <span>Average</span>
                   <span>Very clean</span>

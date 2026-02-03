@@ -6,7 +6,7 @@ const Landing: React.FC = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <section className="container py-16 md:py-24">
+      <section className="app-container py-16 md:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-5xl md:text-6xl font-bold text-black mb-6 leading-tight">
@@ -37,7 +37,7 @@ const Landing: React.FC = () => {
 
       {/* How It Works Section */}
       <section className="bg-gray-50 py-16 md:py-24">
-        <div className="container">
+        <div className="app-container">
           <div className="mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-black mb-3">How Sakny works ?</h2>
             <p className="text-gray-500 text-base">Three simple steps to move into your next shared flat in Egypt</p>
@@ -46,19 +46,19 @@ const Landing: React.FC = () => {
           {/* Three Steps */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-black mb-3">1. Create your profile</h3>
+              <h3 className="text-lg font-bold text-black mb-3"> Create your profile</h3>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Add your lifestyle, budget in EGP, and preferred Egyptian areas like Nasr City or Mohandessin.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-black mb-3">2. Tell us your preferences</h3>
+              <h3 className="text-lg font-bold text-black mb-3"> Tell us your preferences</h3>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Choose whether you prefer same-gender roommates only or if you are open to mixed-gender stays.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-black mb-3">3. Chat and move in</h3>
+              <h3 className="text-lg font-bold text-black mb-3"> Chat and move in</h3>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Message potential roommates, agree on rent, and Move into a place that fits your lifestyle.
               </p>

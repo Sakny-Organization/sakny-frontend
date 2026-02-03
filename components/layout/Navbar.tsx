@@ -8,6 +8,8 @@ import { Menu, X, Bell, User as UserIcon, LogOut, Home, Search as SearchIcon, Me
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { saved } = useSelector((state: RootState) => state.roommates);
+  const { unreadNotifications, unreadMessages } = useSelector((state: RootState) => state.notifications);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,7 +38,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="app-container">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
@@ -50,27 +52,47 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <div className="flex space-x-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(link.path)
-                        ? 'text-black bg-gray-100'
-                        : 'text-gray-600 hover:text-black hover:bg-gray-50'
-                        }`}
-                    >
-                      {link.icon}
-                      {link.name}
-                    </Link>
-                  ))}
+                  {navLinks.map((link) => {
+                    // Get real counts from Redux store
+                    const counts: { [key: string]: number } = {
+                      '/messages': unreadMessages,
+                      '/saved': saved.length,
+                    };
+                    const count = counts[link.path] || 0;
+
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${isActive(link.path)
+                          ? 'text-black bg-gray-100'
+                          : 'text-gray-600 hover:text-black hover:bg-gray-50'
+                          }`}
+                      >
+                        {link.icon}
+                        {link.name}
+                        {/* Only show badge if count > 0 */}
+                        {count > 0 && (
+                          <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            {count > 9 ? '9+' : count}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
                 <div className="flex items-center gap-4">
-                  <Link to="/notifications" className="text-gray-500 hover:text-gray-700 relative">
+                  <Link to="/notifications" className="text-gray-500 hover:text-gray-700 relative p-1">
                     <Bell size={20} />
-                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full border border-white"></span>
+                    {/* Notification count badge - from Redux */}
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                      </span>
+                    )}
                   </Link>
 
                   <div className="flex items-center gap-3 pl-2">

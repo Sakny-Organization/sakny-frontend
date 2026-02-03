@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -30,13 +31,17 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <button
+    <motion.button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
       {...props}
     >
       {children}
-    </button>
+    </motion.button>
   );
 };
 
 export default Button;
+

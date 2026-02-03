@@ -3,7 +3,7 @@ import React from 'react';
 const Footer: React.FC = () => {
   return (
     <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
-      <div className="container">
+      <div className="app-container">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
 
           {/* Left-aligned links */}

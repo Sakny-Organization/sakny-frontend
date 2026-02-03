@@ -1,6 +1,7 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { AnimatePresence } from 'framer-motion';
 import { RootState } from './store';
 
 // Components
@@ -28,11 +29,16 @@ const ProtectedRoute: React.FC = () => {
 
 // Layout Wrapper
 const Layout: React.FC = () => {
+  const location = useLocation();
+  const isFullWidthPage = location.pathname === '/' || location.pathname === '/profile-setup';
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
-      <main className="flex-grow">
-        <Outlet />
+      <main className={`flex-grow ${!isFullWidthPage ? 'app-container py-8' : ''}`}>
+        <AnimatePresence mode="wait">
+          <Outlet />
+        </AnimatePresence>
       </main>
       <Footer />
     </div>
@@ -67,3 +73,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

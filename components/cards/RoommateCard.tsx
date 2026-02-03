@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Roommate } from '../../types';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
@@ -34,7 +35,12 @@ const RoommateCard: React.FC<RoommateCardProps> = ({ roommate }) => {
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.4, ease: [0.23, 1, 0.320, 1] }}
+      whileHover={{ y: -8 }}
       className="group bg-white rounded-xl shadow-sm hover:shadow-hover border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex flex-col h-full"
       onClick={handleViewProfile}
     >
@@ -79,9 +85,15 @@ const RoommateCard: React.FC<RoommateCardProps> = ({ roommate }) => {
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
           {roommate.tags.slice(0, 3).map((tag, idx) => (
-            <span key={idx} className="bg-gray-50 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide">
+            <motion.span
+              key={idx}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.1, duration: 0.3 }}
+              className="bg-gray-50 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide"
+            >
               {tag}
-            </span>
+            </motion.span>
           ))}
         </div>
 
@@ -106,8 +118,10 @@ const RoommateCard: React.FC<RoommateCardProps> = ({ roommate }) => {
           </div>
 
           <div className="flex gap-3">
-            <button
+            <motion.button
               onClick={handleSave}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
               className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${isSaved
                 ? 'bg-black border-black text-white hover:bg-gray-800'
                 : 'bg-white border-gray-200 text-gray-400 hover:border-black hover:text-black'
@@ -115,14 +129,14 @@ const RoommateCard: React.FC<RoommateCardProps> = ({ roommate }) => {
               title={isSaved ? "Unsave Profile" : "Save Profile"}
             >
               <Bookmark size={18} fill={isSaved ? "currentColor" : "none"} />
-            </button>
+            </motion.button>
             <Button variant="primary" size="sm" onClick={handleViewProfile} className="!px-5 whitespace-nowrap">
               View profile
             </Button>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

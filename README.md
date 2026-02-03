@@ -1,20 +1,47 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Sakny - Roommate Matching Platform
 
-# Run and deploy your AI Studio app
+A modern roommate matching platform built with React, TypeScript, and Vite.
 
-This contains everything you need to run your app locally.
+## 🚀 Quick Start
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+```bash
+# Install dependencies
+npm install
 
-## Run Locally
+# Start development server
+npm run dev
 
-**Prerequisites:**  Node.js
+# Build for production
+npm run build
+```
 
+## 📁 Project Structure
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```
+sakny/
+├── components/          # Reusable React components
+│   ├── cards/          # Card components
+│   ├── common/         # Common components (Button, Badge, etc.)
+│   └── layout/         # Layout components (Navbar, Footer)
+├── pages/              # Page components
+├── slices/             # Redux slices
+├── styles/             # Modular CSS files
+├── utils/              # Utility functions
+├── data/               # Mock data
+└── types.ts            # TypeScript type definitions
+```
+
+## 🎨 CSS Architecture
+
+The project uses a modular CSS architecture. See `styles/README.md` for details.
+
+## 🛠️ Tech Stack
+
+- **React** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Redux Toolkit** - State management
+- **Framer Motion** - Animations
+- **React Router** - Routing
+- **Lucide React** - Icons
+

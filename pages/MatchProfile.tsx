@@ -37,7 +37,7 @@ const MatchProfile: React.FC = () => {
     return (
         <div className="match-profile-page">
             {/* Page Title */}
-            <div className="container py-6">
+            <div className="py-6">
                 <h1 className="text-3xl font-bold">Match Profile</h1>
             </div>
 
@@ -51,7 +51,7 @@ const MatchProfile: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="container">
+            <div>
                 <div className="match-content">
                     {/* Left Column - Profile Details */}
                     <div className="match-main">

@@ -14,7 +14,7 @@ const SavedProfiles: React.FC = () => {
 
     return (
         <div className="saved-profiles-page">
-            <div className="container py-8">
+            <div>
                 {/* Header */}
                 <div className="page-header">
                     <div>

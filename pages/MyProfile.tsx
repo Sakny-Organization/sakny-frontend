@@ -52,7 +52,7 @@ const MyProfile: React.FC = () => {
 
     return (
         <div className="my-profile-page">
-            <div className="container py-8">
+            <div>
                 {/* Header */}
                 <div className="profile-page-header">
                     <div>
