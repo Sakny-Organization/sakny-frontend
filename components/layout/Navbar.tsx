@@ -20,11 +20,39 @@ const Navbar: React.FC = () => {
     navigate('/');
   };
 
+  const handleNavClick = (path: string) => {
+    setIsMobileMenuOpen(false);
+
+    if (path.includes('#')) {
+      const [route, hash] = path.split('#');
+      if (location.pathname === '/' || route === '') {
+        // Already on landing page, just scroll
+        setTimeout(() => {
+          const element = document.getElementById(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 0);
+      } else {
+        // Need to navigate to landing page first
+        navigate('/');
+        setTimeout(() => {
+          const element = document.getElementById(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    } else {
+      navigate(path);
+    }
+  };
+
   const publicNavLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Features', path: '/#features' },
     { name: 'How it works', path: '/#how-it-works' },
-    { name: 'For Students', path: '/#students' },
-    { name: 'For Professionals', path: '/#professionals' },
+    { name: 'Testimonials', path: '/#testimonials' },
   ];
 
   const navLinks = [
@@ -37,158 +65,201 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
-      <div className="app-container">
-        <div className="flex justify-between h-16">
+    <nav className="sticky top-0 z-50 py-4 w-full pointer-events-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-auto">
+        <div
+          className="bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl px-6 py-3 flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow-md supports-[backdrop-filter]:bg-white/60"
+        >
           {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="font-bold text-2xl text-black tracking-tight">Sakny</span>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="size-9 bg-black text-white rounded-xl flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 group-hover:rotate-3 duration-300">
+                <span className="text-xl font-bold">∞</span>
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-gray-900">Sakny</h2>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-8">
             {isAuthenticated ? (
               <>
-                <div className="flex space-x-4">
-                  {navLinks.map((link) => {
-                    // Get real counts from Redux store
-                    const counts: { [key: string]: number } = {
-                      '/messages': unreadMessages,
-                      '/saved': saved.length,
-                    };
-                    const count = counts[link.path] || 0;
+                {navLinks.map((link) => {
+                  const counts: { [key: string]: number } = {
+                    '/messages': unreadMessages,
+                    '/saved': saved.length,
+                  };
+                  const count = counts[link.path] || 0;
 
-                    return (
-                      <Link
-                        key={link.path}
-                        to={link.path}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${isActive(link.path)
-                          ? 'text-black bg-gray-100'
-                          : 'text-gray-600 hover:text-black hover:bg-gray-50'
-                          }`}
-                      >
-                        {link.icon}
-                        {link.name}
-                        {/* Only show badge if count > 0 */}
-                        {count > 0 && (
-                          <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                            {count > 9 ? '9+' : count}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                <div className="h-6 w-px bg-gray-200 mx-2"></div>
-
-                <div className="flex items-center gap-4">
-                  <Link to="/notifications" className="text-gray-500 hover:text-gray-700 relative p-1">
-                    <Bell size={20} />
-                    {/* Notification count badge - from Redux */}
-                    {unreadNotifications > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                      </span>
-                    )}
-                  </Link>
-
-                  <div className="flex items-center gap-3 pl-2">
-                    <Link to="/profile" className="flex items-center gap-2">
-                      <img
-                        src={user?.avatar}
-                        alt="Profile"
-                        className="h-8 w-8 rounded-full border border-gray-200 object-cover"
-                      />
-                      <span className="text-sm font-medium text-gray-700">{user?.name}</span>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                      title="Logout"
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 relative px-3 py-1.5 rounded-lg hover:bg-gray-100/50 ${isActive(link.path)
+                        ? 'text-black bg-gray-50'
+                        : 'text-gray-500 hover:text-black'
+                        }`}
                     >
-                      <LogOut size={18} />
-                    </button>
-                  </div>
-                </div>
+                      {link.icon}
+                      {link.name}
+                      {count > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                          {count > 9 ? '9+' : count}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </>
             ) : (
-              <>
-                <div className="flex space-x-6">
-                  {publicNavLinks.map((link) => (
-                    <a
-                      key={link.path}
-                      href={link.path}
-                      className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
-                    >
-                      {link.name}
-                    </a>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link to="/login">
-                    <Button variant="ghost">Login</Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button variant="primary">Sign Up</Button>
-                  </Link>
-                </div>
-              </>
+              <div className="flex items-center gap-6">
+                {publicNavLinks.map((link) => (
+                  <button
+                    key={link.path}
+                    onClick={() => handleNavClick(link.path)}
+                    className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+                  >
+                    {link.name}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-600 hover:text-gray-900 p-2"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+          {/* Right Section */}
+          <div className="flex gap-4 items-center">
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center gap-4">
+                <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-black transition-colors hover:bg-gray-100 rounded-full">
+                  <Bell size={20} />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white"></span>
+                  )}
+                </Link>
+
+                <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+
+                <Link to="/profile" className="flex items-center gap-3 pl-1">
+                  <div className="relative">
+                    <img
+                      src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User") + "&background=random"}
+                      alt="Profile"
+                      className="h-9 w-9 rounded-full border border-gray-200 object-cover shadow-sm transition-transform hover:scale-105"
+                    />
+                    <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
+                  <span className="text-sm font-medium hidden sm:inline text-gray-700">{user?.name}</span>
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-3">
+                <Link to="/login" className="hidden sm:inline-block">
+                  <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black transition-colors">
+                    Log In
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary" size="sm" className="shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-all">Get Started</Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile menu button */}
+            <div className="flex items-center md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-gray-700 hover:text-black p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        {/* Mobile Menu */}
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+          <div className="bg-white/90 backdrop-blur-md border border-gray-200/60 rounded-2xl shadow-xl p-2 space-y-1">
             {isAuthenticated ? (
               <>
+                <Link to="/profile" className="px-4 py-3 border-b border-gray-100 flex items-center gap-3 mb-1 hover:bg-gray-50 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                  <img
+                    src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User")}
+                    alt="Profile"
+                    className="h-10 w-10 rounded-full border border-gray-200"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{user?.name}</p>
+                    <p className="text-xs text-gray-500">{user?.email || 'User'}</p>
+                  </div>
+                </Link>
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className="flex items-center gap-3 block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-all"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.icon}
                     {link.name}
                   </Link>
                 ))}
+                <Link
+                  to="/notifications"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Bell size={18} />
+                  Notifications
+                  {unreadNotifications > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all text-left mt-2"
                 >
                   <LogOut size={18} />
                   Logout
                 </button>
               </>
             ) : (
-              <div className="space-y-2 p-2">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="ghost" fullWidth>Log In</Button>
-                </Link>
-                <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="primary" fullWidth>Sign Up</Button>
-                </Link>
+              <div className="p-2 space-y-1">
+                {publicNavLinks.map((link) => (
+                  <button
+                    key={link.path}
+                    onClick={() => handleNavClick(link.path)}
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-all"
+                  >
+                    {link.name}
+                  </button>
+                ))}
+                <div className="pt-2 mt-2 border-t border-gray-100 grid grid-cols-2 gap-2">
+                  <Link to="/login" className="w-full">
+                    <button className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      Log In
+                    </button>
+                  </Link>
+                  <Link to="/signup" className="w-full">
+                    <button className="w-full px-4 py-2.5 text-sm font-bold text-white bg-black rounded-xl shadow-lg hover:bg-gray-800 transition-all">
+                      Sign Up
+                    </button>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

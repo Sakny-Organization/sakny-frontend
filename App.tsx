@@ -30,17 +30,18 @@ const ProtectedRoute: React.FC = () => {
 // Layout Wrapper
 const Layout: React.FC = () => {
   const location = useLocation();
-  const isFullWidthPage = location.pathname === '/' || location.pathname === '/profile-setup';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isFullWidthPage = location.pathname === '/' || location.pathname === '/profile-setup' || isAuthPage;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
-      <main className={`flex-grow ${!isFullWidthPage ? 'app-container py-8' : ''}`}>
+    <div className="flex flex-col min-h-screen bg-background">
+      {!isAuthPage && <Navbar />}
+      <main className={`flex-grow ${!isFullWidthPage ? 'app-container py-6 md:py-8' : ''}`}>
         <AnimatePresence mode="wait">
           <Outlet />
         </AnimatePresence>
       </main>
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { MessageCircle, Send, Search as SearchIcon } from 'lucide-react';
+import { MessageCircle, Send, Search as SearchIcon, ArrowLeft } from 'lucide-react';
 import Button from '../components/common/Button';
 
 interface Message {
@@ -128,8 +128,8 @@ const Messages: React.FC = () => {
     return (
         <div className="h-[calc(100vh-8rem)] flex rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
             {/* Conversations List */}
-            <div className="w-80 md:w-96 border-r border-gray-200 flex flex-col bg-white">
-                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+            <div className={`flex-col border-r border-gray-200 bg-white ${selectedConversation ? 'hidden md:flex md:w-96' : 'w-full md:w-96 flex'}`}>
+                <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10">
                     <h2 className="text-xl font-bold text-black">Messages</h2>
                     <span className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded-full">
                         {conversations.reduce((sum, c) => sum + c.unreadCount, 0)}
@@ -137,7 +137,7 @@ const Messages: React.FC = () => {
                 </div>
 
                 {/* Search */}
-                <div className="p-4 border-b border-gray-200 relative">
+                <div className="p-4 border-b border-gray-200 relative bg-white">
                     <SearchIcon size={18} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
@@ -160,7 +160,7 @@ const Messages: React.FC = () => {
                                 <img
                                     src={conversation.roommateAvatar}
                                     alt={conversation.roommateName}
-                                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                    className="size-12 rounded-full object-cover flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
@@ -170,9 +170,9 @@ const Messages: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className={`text-sm truncate mr-2 ${conversation.unreadCount > 0 ? 'font-semibold text-black' : 'text-gray-500'}`}>
+                                        <p className={`text-sm truncate mr-2 ${conversation.unreadCount > 0 ? 'font-semibold text-black' : 'text-gray-500'}`}>
                                             {conversation.lastMessage}
-                                        </span>
+                                        </p>
                                         {conversation.unreadCount > 0 && (
                                             <span className="bg-black text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0">{conversation.unreadCount}</span>
                                         )}
@@ -181,7 +181,7 @@ const Messages: React.FC = () => {
                             </button>
                         ))
                     ) : (
-                        <div className="empty-conversations">
+                        <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                             <p>No conversations found</p>
                         </div>
                     )}
@@ -189,18 +189,24 @@ const Messages: React.FC = () => {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-gray-50">
+            <div className={`flex-col bg-gray-50 ${selectedConversation ? 'flex w-full md:flex-1' : 'hidden md:flex md:flex-1'}`}>
                 {activeConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className="h-20 bg-white border-b border-gray-200 flex items-center px-6 gap-4">
+                        <div className="h-16 md:h-20 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 gap-3 sticky top-0 z-10 shadow-sm md:shadow-none">
+                            <button
+                                onClick={() => setSelectedConversation(null)}
+                                className="md:hidden p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600"
+                            >
+                                <ArrowLeft size={20} />
+                            </button>
                             <img
                                 src={activeConversation.roommateAvatar}
                                 alt={activeConversation.roommateName}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="size-10 rounded-full object-cover"
                             />
-                            <div>
-                                <h3 className="font-bold text-black">{activeConversation.roommateName}</h3>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-black truncate">{activeConversation.roommateName}</h3>
                                 <span className="text-xs text-green-600 font-medium flex items-center gap-1">
                                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                                     Active now
@@ -209,7 +215,7 @@ const Messages: React.FC = () => {
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                             {activeConversation.messages.map((message) => (
                                 <div
                                     key={message.id}
@@ -219,10 +225,10 @@ const Messages: React.FC = () => {
                                         <img
                                             src={activeConversation.roommateAvatar}
                                             alt=""
-                                            className="w-8 h-8 rounded-full object-cover self-end mb-1"
+                                            className="size-8 rounded-full object-cover self-end mb-1"
                                         />
                                     )}
-                                    <div className={`max-w-[70%] p-4 rounded-2xl ${message.senderId === 'user' ? 'bg-black text-white rounded-tr-none' : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'}`}>
+                                    <div className={`max-w-[75%] md:max-w-[70%] p-3 md:p-4 rounded-2xl ${message.senderId === 'user' ? 'bg-black text-white rounded-tr-none' : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none shadow-sm'}`}>
                                         <p className="text-sm leading-relaxed">{message.text}</p>
                                         <span className={`text-[10px] block mt-1 ${message.senderId === 'user' ? 'text-white/70 text-right' : 'text-gray-400'}`}>
                                             {formatTime(message.timestamp)}
@@ -233,19 +239,20 @@ const Messages: React.FC = () => {
                         </div>
 
                         {/* Message Input */}
-                        <div className="p-4 bg-white border-t border-gray-200 flex gap-4 items-center">
+                        <div className="p-3 md:p-4 bg-white border-t border-gray-200 flex gap-2 md:gap-4 items-center">
                             <input
                                 type="text"
                                 placeholder="Type a message..."
                                 value={messageText}
                                 onChange={(e) => setMessageText(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                                className="flex-1 bg-gray-100 border-none rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                                className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black"
                             />
                             <Button
                                 variant="primary"
                                 onClick={handleSendMessage}
                                 disabled={!messageText.trim()}
+                                className="rounded-full !p-2 md:!px-4 md:!py-2"
                             >
                                 <Send size={18} />
                             </Button>

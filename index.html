@@ -1,28 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sakny - Find Your Perfect Roommate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%23000000' width='32' height='32' rx='6'/><text x='50%' y='50%' font-size='20' font-weight='bold' fill='%23ffffff' text-anchor='middle' dy='.3em'>∞</text></svg>"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "react-redux": "https://esm.sh/react-redux@^9.2.0",
-    "@reduxjs/toolkit": "https://esm.sh/@reduxjs/toolkit@^2.11.2"
-  }
-}
-</script>
-<link rel="stylesheet" href="/styles/index.css">
-</head>
-  <body class="bg-gray-50 text-gray-900 font-sans antialiased">
+    <script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#000000",
+              textDark: "#111111",
+              muted: "#6b7280",
+              background: "#ffffff",
+              card: "#f9fafb",
+              borderLight: "#e5e7eb",
+            },
+            fontFamily: {
+              display: ["Manrope", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.75rem",
+              lg: "1rem",
+              xl: "1.25rem",
+              "2xl": "1.5rem",
+              "3xl": "2rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+          "react-redux": "https://esm.sh/react-redux@^9.2.0",
+          "@reduxjs/toolkit": "https://esm.sh/@reduxjs/toolkit@^2.11.2"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/styles/index.css" />
+  </head>
+  <body class="bg-background text-textDark font-display antialiased">
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
