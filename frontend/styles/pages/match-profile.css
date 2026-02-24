@@ -1,0 +1,351 @@
+/* ============================================
+   Match Profile Page Styles
+   ============================================ */
+
+.match-profile-page {
+    min-height: 100vh;
+    background-color: var(--color-gray-50);
+    padding-bottom: var(--spacing-12);
+}
+
+/* Hero Image */
+.match-hero,
+.profile-hero {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    background-color: var(--color-gray-200);
+    margin-bottom: calc(var(--spacing-8) * -1);
+}
+
+.match-hero-image,
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Content Layout */
+.match-content,
+.profile-content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: var(--spacing-8);
+    margin-top: var(--spacing-8);
+    position: relative;
+}
+
+/* Main Column */
+.match-main,
+.profile-main {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-8);
+    box-shadow: var(--shadow-md);
+    animation: slideInLeft 0.5s ease-out;
+}
+
+/* Profile Header */
+.match-header,
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: var(--spacing-6);
+    border-bottom: 1px solid var(--color-gray-200);
+    margin-bottom: var(--spacing-6);
+}
+
+.match-profile-info,
+.profile-avatar-section {
+    display: flex;
+    gap: var(--spacing-4);
+    align-items: center;
+}
+
+.match-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-white);
+    box-shadow: var(--shadow-md);
+}
+
+.match-name,
+.profile-name {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-1);
+}
+
+.match-occupation,
+.profile-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-600);
+}
+
+/* Compatibility Badge */
+.match-compatibility,
+.compatibility-badge {
+    text-align: right;
+}
+
+.compatibility-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-1);
+}
+
+.compatibility-value,
+.compatibility-score {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-1);
+}
+
+.compatibility-link,
+.view-breakdown {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--transition-fast);
+}
+
+.compatibility-link:hover,
+.view-breakdown:hover {
+    color: var(--color-black);
+}
+
+/* Sections */
+.match-section,
+.profile-section {
+    margin-bottom: var(--spacing-6);
+    padding-bottom: var(--spacing-6);
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.match-section:last-child,
+.profile-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.match-bio,
+.profile-bio {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-gray-700);
+    margin-bottom: 0;
+}
+
+.match-section-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-3);
+}
+
+.match-heading {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-2);
+}
+
+.match-subheading {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-6);
+}
+
+/* Housing Details */
+.housing-details {
+    margin-top: var(--spacing-8);
+    padding-top: var(--spacing-8);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.housing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-6);
+    margin-bottom: var(--spacing-4);
+}
+
+.housing-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.housing-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.housing-value {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+}
+
+.housing-note {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    line-height: var(--line-height-relaxed);
+    padding: var(--spacing-4);
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-md);
+    font-style: italic;
+    margin-top: var(--spacing-4);
+    margin-bottom: 0;
+}
+
+/* Sidebar - Pricing Card */
+.match-sidebar,
+.profile-sidebar {
+    position: relative;
+    animation: slideInRight 0.5s ease-out;
+}
+
+.pricing-card,
+.action-card {
+    position: sticky;
+    top: var(--spacing-8);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow-md);
+}
+
+.pricing-header,
+.pricing-info {
+    padding-bottom: var(--spacing-4);
+    border-bottom: 1px solid var(--color-gray-200);
+    margin-bottom: var(--spacing-4);
+}
+
+.pricing-amount,
+.price {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-1);
+}
+
+.pricing-details,
+.price-details {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+}
+
+.pricing-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-6);
+}
+
+.room-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-6);
+}
+
+.info-item,
+.detail-item {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    line-height: var(--line-height-relaxed);
+}
+
+.info-item strong,
+.detail-item strong {
+    color: var(--color-black);
+    font-weight: var(--font-weight-semibold);
+}
+
+.pricing-actions,
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.action-buttons .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+}
+
+/* Not Found */
+.not-found {
+    text-align: center;
+    padding: var(--spacing-16) var(--spacing-4);
+}
+
+.not-found h2 {
+    margin-bottom: var(--spacing-6);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+
+    .match-content,
+    .profile-content {
+        grid-template-columns: 1fr;
+    }
+
+    .match-sidebar,
+    .profile-sidebar {
+        order: -1;
+    }
+
+    .pricing-card,
+    .action-card {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .housing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .match-hero,
+    .profile-hero {
+        height: 200px;
+    }
+
+    .match-main,
+    .profile-main {
+        padding: var(--spacing-6);
+    }
+
+    .match-header,
+    .profile-header {
+        flex-direction: column;
+        gap: var(--spacing-4);
+    }
+
+    .match-compatibility,
+    .compatibility-badge {
+        text-align: left;
+    }
+}

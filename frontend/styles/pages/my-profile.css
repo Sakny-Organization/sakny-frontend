@@ -1,0 +1,278 @@
+/* ============================================
+   My Profile Page Styles
+   ============================================ */
+
+.my-profile-page {
+    min-height: 100vh;
+    background-color: var(--color-gray-50);
+    padding-bottom: var(--spacing-12);
+}
+
+/* Profile Page Header */
+.profile-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-8);
+}
+
+/* Profile Grid Layout */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: var(--spacing-8);
+}
+
+.profile-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
+}
+
+.profile-sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
+}
+
+/* Profile Card */
+.profile-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-8);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Avatar Section */
+.profile-avatar-section {
+    display: flex;
+    gap: var(--spacing-6);
+    align-items: flex-start;
+    padding-bottom: var(--spacing-6);
+    border-bottom: 1px solid var(--color-gray-200);
+    margin-bottom: var(--spacing-6);
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.profile-name-large {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-2);
+}
+
+.profile-header-info {
+    flex: 1;
+}
+
+.profile-meta {
+    display: flex;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+}
+
+/* Contact Info */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    font-size: var(--font-size-base);
+    color: var(--color-gray-700);
+}
+
+/* Bio */
+.bio-text {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-gray-700);
+    margin: 0;
+}
+
+.bio-textarea {
+    width: 100%;
+    padding: var(--spacing-3);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    resize: vertical;
+}
+
+.bio-textarea:focus {
+    outline: none;
+    border-color: var(--color-black);
+}
+
+/* Lifestyle Grid */
+.lifestyle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-4);
+}
+
+.lifestyle-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.lifestyle-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lifestyle-value {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+}
+
+/* Preferences Grid */
+.preferences-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.pref-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.pref-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-600);
+}
+
+.pref-value {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+}
+
+/* Profile Actions */
+.profile-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-6);
+    border-top: 1px solid var(--color-gray-200);
+    margin-top: var(--spacing-6);
+}
+
+/* Sidebar Cards */
+.stats-card,
+.completion-card,
+.actions-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-4);
+}
+
+/* Completion Progress */
+.completion-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.completion-tips {
+    margin-top: var(--spacing-4);
+    padding: var(--spacing-4);
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-md);
+}
+
+.tip-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+    margin-bottom: var(--spacing-2);
+}
+
+.tip-list {
+    list-style: disc;
+    padding-left: var(--spacing-5);
+    margin: 0;
+}
+
+.tip-list li {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-1);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-sidebar-column {
+        order: -1;
+    }
+
+    .lifestyle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-page-header {
+        flex-direction: column;
+        gap: var(--spacing-4);
+    }
+
+    .profile-avatar-section {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-meta {
+        flex-direction: column;
+        gap: var(--spacing-2);
+    }
+
+    .profile-card {
+        padding: var(--spacing-6);
+    }
+}
