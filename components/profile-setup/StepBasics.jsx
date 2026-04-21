@@ -11,6 +11,11 @@ const StepBasics = ({ data, onChange, errors = {} }) => {
     data.occupation && !occupationOptions.slice(0, 3).includes(data.occupation)
   );
 
+  const genderOptions = [
+    { label: 'Male', value: 'MALE' },
+    { label: 'Female', value: 'FEMALE' },
+  ];
+
   const filteredCities = useMemo(() => {
     if (!data.currentGovernorate) return [];
     return citiesByGovernorate[data.currentGovernorate] || [];
@@ -69,19 +74,19 @@ const StepBasics = ({ data, onChange, errors = {} }) => {
           Gender <span className="text-gray-500 font-normal">Required</span>
         </label>
         <div className="flex flex-col gap-2">
-          {['Male', 'Female'].map((option) => (
+          {genderOptions.map((option) => (
             <label
-              key={option}
+              key={option.value}
               className="flex flex-row items-center gap-3 p-4 border border-gray-200 rounded-md cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 has-[:checked]:border-black has-[:checked]:bg-gray-50 w-full"
             >
               <input
                 type="radio"
                 name="gender"
-                checked={data.gender === option}
-                onChange={() => onChange({ ...data, gender: option })}
+                checked={data.gender === option.value}
+                onChange={() => onChange({ ...data, gender: option.value })}
                 className="w-5 h-5 m-0 cursor-pointer accent-black"
               />
-              <span className="text-base text-black leading-none">{option}</span>
+              <span className="text-base text-black leading-none">{option.label}</span>
             </label>
           ))}
         </div>

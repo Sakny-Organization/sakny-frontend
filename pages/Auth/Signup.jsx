@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { mockSignup } from '../../slices/authSlice';
+import { clearAuthError, registerUser } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { Mail, Lock, User, Camera, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+
 const Signup = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { loading, error: authError } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(clearAuthError());
+    }, [dispatch]);
+
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -19,6 +26,8 @@ const Signup = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [avatar, setAvatar] = useState('');
     const [errors, setErrors] = useState({});
+    const [submitError, setSubmitError] = useState('');
+
     const validateField = (name, value) => {
         let error = "";
         switch (name) {
@@ -49,11 +58,17 @@ const Signup = () => {
         }
         setErrors((prev) => ({ ...prev, [name]: error }));
     };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
         validateField(name, value);
+        if (submitError || authError) {
+            setSubmitError('');
+            dispatch(clearAuthError());
+        }
     };
+
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -62,24 +77,34 @@ const Signup = () => {
             reader.readAsDataURL(file);
         }
     };
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const hasErrors = Object.values(errors).some(err => err !== "");
         const hasEmptyFields = Object.values(formData).some(val => val === "");
-        if (!hasErrors && !hasEmptyFields) {
-            const userData = {
-                ...formData,
-                phone: `+20${formData.phone}`,
-                avatar: avatar || `https://i.pravatar.cc/150?u=${formData.email}`,
-            };
-            localStorage.setItem('sakny_user', JSON.stringify(userData));
-            dispatch(mockSignup(userData));
-            navigate('/profile-setup');
+
+        if (hasErrors || hasEmptyFields) {
+            setSubmitError('Please fix the errors before continuing.');
+            return;
         }
-        else {
-            alert("Please fix the errors before continuing.");
+
+        const normalizedPhone = `+20${formData.phone}`;
+        const generatedAvatar = avatar || `https://i.pravatar.cc/150?u=${formData.email}`;
+
+        try {
+            await dispatch(registerUser({
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                phone: normalizedPhone,
+                avatar: generatedAvatar,
+            })).unwrap();
+            navigate('/profile-setup');
+        } catch (error) {
+            setSubmitError(error || 'Unable to create account right now.');
         }
     };
+
     return (<div className="min-h-[80vh] flex flex-col justify-center py-12 bg-gray-50">
       <div className="container-sm mx-auto px-4">
         <Link to="/" className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-6 transition-colors">
@@ -138,7 +163,15 @@ const Signup = () => {
               </button>
             </div>
 
-            <Button type="submit" fullWidth variant="primary" size="lg">Continue</Button>
+            {(submitError || authError) && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {submitError || authError}
+              </div>
+            )}
+
+            <Button type="submit" fullWidth variant="primary" size="lg" disabled={loading}>
+              {loading ? 'Creating account...' : 'Continue'}
+            </Button>
           </form>
 
           <div className="mt-6 text-center border-t border-gray-100 pt-6">
@@ -150,4 +183,5 @@ const Signup = () => {
       </div>
     </div>);
 };
+
 export default Signup;

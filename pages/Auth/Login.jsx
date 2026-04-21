@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { mockLogin, loginSuccess } from '../../slices/authSlice';
+import { clearAuthError, loginUser } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { loading, error: authError } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(clearAuthError());
+    }, [dispatch]);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [submitError, setSubmitError] = useState('');
+
     const validateField = (name, value) => {
         let error = "";
         if (name === 'email') {
@@ -29,45 +37,44 @@ const Login = () => {
         }
         setErrors((prev) => ({ ...prev, [name]: error }));
     };
+
     const handleEmailChange = (e) => {
         const val = e.target.value;
         setEmail(val);
         validateField('email', val);
+        if (submitError || authError) {
+            setSubmitError('');
+            dispatch(clearAuthError());
+        }
     };
+
     const handlePasswordChange = (e) => {
         const val = e.target.value;
         setPassword(val);
         validateField('password', val);
+        if (submitError || authError) {
+            setSubmitError('');
+            dispatch(clearAuthError());
+        }
     };
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError('');
+
         if (errors.email || errors.password || !email || !password) {
             setSubmitError('Please fix errors or fill all fields');
             return;
         }
-        const savedUserData = localStorage.getItem('sakny_user');
-        if (savedUserData) {
-            const userData = JSON.parse(savedUserData);
-            if (userData.email === email && userData.password === password) {
-                dispatch(loginSuccess({
-                    id: 'user-' + Date.now(),
-                    name: userData.name,
-                    email: userData.email,
-                    avatar: userData.avatar,
-                    profileCompletion: 75,
-                }));
-                navigate('/dashboard');
-                return;
-            }
-            else if (userData.email === email) {
-                setSubmitError('Incorrect password');
-                return;
-            }
+
+        try {
+            await dispatch(loginUser({ email, password })).unwrap();
+            navigate('/dashboard');
+        } catch (error) {
+            setSubmitError(error || 'Unable to login right now.');
         }
-        dispatch(mockLogin());
-        navigate('/dashboard');
     };
+
     return (<div className="flex min-h-screen w-full bg-white">
       {/* Left Panel - Image & Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-black flex-col justify-between p-12 lg:p-16 overflow-hidden">
@@ -138,11 +145,11 @@ Back to Home          </Link>
               </div>
             </div>
 
-            {submitError && (<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            {(submitError || authError) && (<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                {submitError}
+                {submitError || authError}
               </div>)}
 
             <div className="flex items-center gap-2">
@@ -152,8 +159,8 @@ Back to Home          </Link>
               </label>
             </div>
 
-            <Button type="submit" fullWidth variant="primary" size="lg" className="h-12 bg-black hover:bg-gray-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all">
-              Login to Sakny
+            <Button type="submit" fullWidth variant="primary" size="lg" className="h-12 bg-black hover:bg-gray-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login to Sakny'}
             </Button>
           </form>
 
@@ -167,4 +174,5 @@ Back to Home          </Link>
       </div>
     </div>);
 };
+
 export default Login;

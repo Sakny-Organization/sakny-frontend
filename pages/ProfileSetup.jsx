@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AnimatePresence, motion } from 'framer-motion';
 import { completeProfile, updateProfileData } from '../slices/authSlice';
+import { createProfile, updateProfile } from '../services/profileApi';
 import Button from '../components/common/Button';
 import { Check } from 'lucide-react';
 
@@ -23,6 +24,9 @@ const ProfileSetup = () => {
     const [highestVisited, setHighestVisited] = useState(1);
     const totalSteps = 6;
     const isEditing = location.state?.edit || false;
+    const [submitError, setSubmitError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { token, user: authUser } = useSelector((state) => state.auth);
 
     const [profileData, setProfileData] = useState({
         // Basics
@@ -136,7 +140,7 @@ const ProfileSetup = () => {
         return Object.keys(errors).length === 0;
     }, [currentStep, profileData]);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         const errors = validateStep(currentStep);
         if (Object.keys(errors).length > 0) {
             setStepErrors(errors);
@@ -150,17 +154,56 @@ const ProfileSetup = () => {
             if (nextStep > highestVisited) setHighestVisited(nextStep);
         } else {
             // Final submit
-            const submissionData = {
-                ...profileData,
-                roommateGender: profileData.gender, // Auto same-gender
+            setIsSubmitting(true);
+            setSubmitError('');
+
+            // Map frontend state to backend ProfileRequest
+            const profileRequest = {
+                age: parseInt(profileData.age),
+                gender: profileData.gender,
+                occupation: profileData.occupation,
+                currentGovernorateId: 1, // To be replaced with real selection
+                currentCityId: 1, // To be replaced with real selection
+                bio: profileData.bio,
+                universityOrSchool: profileData.universityOrSchool,
+                companyName: profileData.companyName,
+                instagram: profileData.socialLinks.instagram,
+                linkedin: profileData.socialLinks.linkedin,
+                personalityTraits: profileData.personality,
+                smoking: profileData.smoking, // Backend SmokingStatus enum
+                pets: profileData.pets, // Backend PetStatus enum
+                sleepSchedule: profileData.sleepSchedule, // Backend SleepSchedule enum
+                cleanliness: profileData.cleanliness,
+                budgetMin: profileData.budgetMin,
+                budgetMax: profileData.budgetMax,
+                preferredAreas: profileData.preferredAreas.map(area => ({
+                    governorateId: 1, // To be replaced
+                    cityId: 1, // To be replaced
+                    areaName: area
+                })),
+                roommateType: profileData.roommateType, // Backend RoommateType enum
+                prefSmoking: profileData.prefSmoking || 'ANY_STATUS',
+                prefPets: profileData.prefPets || 'ANY_STATUS',
+                prefSleepSchedule: profileData.prefSleepSchedule || 'ANY_SCHEDULE',
+                prefCleanliness: profileData.prefCleanliness || 'ANY_LEVEL'
             };
-            if (isEditing) {
-                dispatch(updateProfileData(submissionData));
-            } else {
-                dispatch(updateProfileData(submissionData));
-                dispatch(completeProfile());
+
+            try {
+                if (isEditing) {
+                    await updateProfile(profileRequest, token);
+                    dispatch(updateProfileData(profileData));
+                } else {
+                    // Profile image currently not in profileData state
+                    await createProfile(profileRequest, null, token);
+                    dispatch(updateProfileData(profileData));
+                    dispatch(completeProfile());
+                }
+                navigate('/profile');
+            } catch (error) {
+                setSubmitError(error.message || 'Failed to save profile. Please try again.');
+            } finally {
+                setIsSubmitting(false);
             }
-            navigate('/profile');
         }
     };
 
@@ -340,15 +383,22 @@ const ProfileSetup = () => {
                   <Button
                     variant="primary"
                     onClick={handleNext}
-                    disabled={!isCurrentStepValid}
+                    disabled={!isCurrentStepValid || isSubmitting}
                   >
-                    {currentStep === totalSteps
-                      ? isEditing
-                        ? 'Save Changes'
-                        : 'Finish profile'
-                      : 'Save & continue'}
+                    {isSubmitting ? 'Saving...' : (
+                      currentStep === totalSteps
+                        ? isEditing
+                          ? 'Save Changes'
+                          : 'Finish profile'
+                        : 'Save & continue'
+                    )}
                   </Button>
                 </div>
+                {submitError && (
+                  <p className="text-sm text-red-500 mt-2 text-center">
+                    {submitError}
+                  </p>
+                )}
                 {!isCurrentStepValid && Object.keys(stepErrors).length > 0 && (
                   <p className="text-sm text-red-500 mt-2 text-center">
                     Please fill in all required fields to continue

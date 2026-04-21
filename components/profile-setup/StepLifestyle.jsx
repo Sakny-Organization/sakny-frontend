@@ -2,20 +2,20 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const smokingOptions = [
-  { value: 'Non-smoker', label: 'Non-smoker', desc: 'I do not smoke at all' },
-  { value: 'Sometimes', label: 'Sometimes', desc: 'I smoke occasionally' },
-  { value: 'Smoke often', label: 'Smoke often', desc: 'I smoke regularly' },
+  { value: 'NON_SMOKER', label: 'Non-smoker', desc: 'I do not smoke at all' },
+  { value: 'SOMETIMES', label: 'Sometimes', desc: 'I smoke occasionally' },
+  { value: 'SMOKE_OFTEN', label: 'Smoke often', desc: 'I smoke regularly' },
 ];
 
 const petsOptions = [
-  { value: 'No pets', label: 'No pets', desc: "I don't have any pets" },
-  { value: 'Have pets', label: 'Have pets', desc: 'I have pets or plan to' },
+  { value: 'NO_PETS', label: 'No pets', desc: "I don't have any pets" },
+  { value: 'HAVE_PETS', label: 'Have pets', desc: 'I have pets or plan to' },
 ];
 
 const sleepOptions = [
-  { value: 'Early bird', label: 'Early bird', desc: 'I sleep early and wake early' },
-  { value: 'Night owl', label: 'Night owl', desc: 'I stay up late' },
-  { value: 'Flexible', label: 'Flexible', desc: 'My schedule varies' },
+  { value: 'EARLY_BIRD', label: 'Early bird', desc: 'I sleep early and wake early' },
+  { value: 'NIGHT_OWL', label: 'Night owl', desc: 'I stay up late' },
+  { value: 'FLEXIBLE', label: 'Flexible', desc: 'My schedule varies' },
 ];
 
 const cleanlinessLabels = ['Very messy', 'A bit messy', 'Average', 'Clean', 'Very clean'];
