@@ -54,7 +54,7 @@ class ApiService {
     });
   }
 
-  async register(name, email, password, phone) {
+  async register({ name, email, password, phone }) {
     return this.request("/v1/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password, phone }),
@@ -84,16 +84,44 @@ class ApiService {
 
   // Roommate/Listing endpoints
   async getRoommates(filters = {}) {
-    const params = new URLSearchParams(filters).toString();
-    return this.request(`/roommates?${params}`, {
-      method: "GET",
-    });
+    const params = new URLSearchParams();
+    if (filters.location) params.append("location", filters.location);
+    if (filters.minBudget) params.append("minBudget", filters.minBudget);
+    if (filters.maxBudget) params.append("maxBudget", filters.maxBudget);
+    if (filters.gender && filters.gender !== "All")
+      params.append("gender", filters.gender);
+    if (filters.lifestyle && filters.lifestyle.length > 0) {
+      filters.lifestyle.forEach((l) => params.append("lifestyle", l));
+    }
+    if (filters.smoking) params.append("smoking", filters.smoking);
+    if (filters.pets) params.append("pets", filters.pets);
+    if (filters.sortBy) params.append("sortBy", filters.sortBy);
+
+    const queryString = params.toString();
+    const response = await this.request(
+      `/v1/search/roommates${queryString ? "?" + queryString : ""}`,
+      {
+        method: "GET",
+      },
+    );
+    return response.data || [];
   }
 
   async getRoommateById(id) {
-    return this.request(`/roommates/${id}`, {
+    const response = await this.request(`/v1/search/roommates/${id}`, {
       method: "GET",
     });
+    return response.data;
+  }
+
+  async getRecommendations(limit = 6) {
+    const response = await this.request(
+      `/v1/search/recommendations?limit=${limit}`,
+      {
+        method: "GET",
+      },
+    );
+    return response.data || [];
   }
 
   // Save token to localStorage

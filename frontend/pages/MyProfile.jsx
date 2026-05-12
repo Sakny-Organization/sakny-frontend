@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
+import AvatarUpload from '../components/AvatarUpload';
+import { updateProfileData } from '../slices/authSlice';
 import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
 import { containerVariants, itemVariants } from '../utils/animations';
 const MyProfile = () => {
     const { user } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
+    const [draftAvatar, setDraftAvatar] = useState(user?.avatar || '');
+    React.useEffect(() => {
+        setDraftAvatar(user?.avatar || '');
+    }, [user?.avatar]);
     if (!user) {
         navigate('/login');
         return null;
@@ -77,7 +84,7 @@ const MyProfile = () => {
                             {/* Avatar Section */}
                             <div className="profile-avatar-section">
                                 <div className="avatar-container">
-                                    <img src={user.avatar || `https://i.pravatar.cc/150?u=${user.id}`} alt={user.name} className="profile-avatar-large" />
+                                    <img src={draftAvatar || user.avatar || `https://i.pravatar.cc/150?u=${user.id}`} alt={user.name} className="profile-avatar-large" />
                                     {isEditing && (<button className="avatar-upload-btn">
                                         <Camera size={20} />
                                     </button>)}
@@ -111,6 +118,13 @@ const MyProfile = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {isEditing && (
+                                <div className="profile-section">
+                                    <h3 className="section-title">Profile Photo</h3>
+                                    <AvatarUpload value={draftAvatar} onChange={setDraftAvatar} />
+                                </div>
+                            )}
 
                             {/* Contact Info */}
                             <div className="profile-section">
@@ -197,7 +211,10 @@ const MyProfile = () => {
                                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                                     Cancel
                                 </Button>
-                                <Button variant="primary" onClick={() => setIsEditing(false)}>
+                                <Button variant="primary" onClick={() => {
+                                    dispatch(updateProfileData({ avatar: draftAvatar }));
+                                    setIsEditing(false);
+                                }}>
                                     Save Changes
                                 </Button>
                             </div>)}

@@ -1,21 +1,27 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
 import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition';
+import SkeletonCard from '../components/SkeletonCard';
+import EmptyState from '../components/EmptyState';
 import { Link } from 'react-router-dom';
 import { Search, BookmarkIcon } from 'lucide-react';
 import { containerVariants, itemVariants } from '../utils/animations';
-const Dashboard = () => {
-  const { user } = useSelector((state) => state.auth);
-  const { list = [] } = useSelector((state) => state.roommates);
+import { fetchRecommendations } from '../slices/matchSlice';
 
-  // Top 3 matches
-  const topMatches = list && Array.isArray(list)
-    ? [...list].sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0)).slice(0, 3)
-    : [];
+const Dashboard = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { recommendations = [], recommendationsStatus } = useSelector((state) => state.matches);
+
+  React.useEffect(() => {
+    if (recommendationsStatus === 'idle') {
+      dispatch(fetchRecommendations(4));
+    }
+  }, [dispatch, recommendationsStatus]);
 
   if (!user) return null;
 
@@ -93,16 +99,25 @@ const Dashboard = () => {
           </Link>
         </motion.div>
 
-        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" variants={containerVariants} initial="initial" animate="animate">
-          {topMatches.map((roommate) => (<RoommateCard key={roommate.id} roommate={roommate} />))}
-        </motion.div>
+        {recommendationsStatus === 'loading' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} />)}
+          </div>
+        )}
 
-        {topMatches.length === 0 && (<motion.div className="bg-gray-50 rounded-lg p-8 text-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <p className="text-gray-600 mb-4">No matches yet. Complete your profile to get better matches!</p>
-          <Link to="/search">
-            <Button variant="primary">Browse Roommates</Button>
-          </Link>
-        </motion.div>)}
+        {recommendationsStatus !== 'loading' && recommendations.length > 0 && (
+          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" variants={containerVariants} initial="initial" animate="animate">
+            {recommendations.map((roommate) => (<RoommateCard key={roommate.id} roommate={roommate} />))}
+          </motion.div>
+        )}
+
+        {recommendationsStatus !== 'loading' && recommendations.length === 0 && (<EmptyState
+          icon={<Search size={26} />}
+          title="No recommendations yet"
+          description="Complete your profile and refine your housing preferences to unlock tailored roommate suggestions."
+          actionLabel="Browse matches"
+          onAction={() => window.location.hash = '#/search'}
+        />)}
       </motion.section>
     </div>
   </PageTransition>);

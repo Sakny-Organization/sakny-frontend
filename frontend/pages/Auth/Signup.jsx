@@ -1,26 +1,46 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginSuccess } from '../../slices/authSlice';
-import apiService from '../../services/api';
+import { registerUser, clearError } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff, Building2, Users } from 'lucide-react';
+import { getPostAuthPath, USER_ROLES } from '../../utils/userRole';
+
 const Signup = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { isAuthenticated, profileCompleted, loading, error } = useSelector((state) => state.auth);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
         email: '',
         password: '',
         confirmPassword: '',
+      role: USER_ROLES.ROOMMATE,
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
     const [submitError, setSubmitError] = useState('');
+
+    // Handle redirect based on auth state and profile completion
+    useEffect(() => {
+        if (isAuthenticated) {
+        navigate(getPostAuthPath({ user: { housingRole: formData.role }, profileCompleted }));
+        }
+    }, [formData.role, isAuthenticated, navigate, profileCompleted]);
+
+    // Sync Redux error with local state
+    useEffect(() => {
+        if (error) {
+            if (error.toLowerCase().includes('already taken')) {
+                setSubmitError('هذا الإيميل مستخدم من قبل! هل تريد تسجيل دخول؟');
+            } else {
+                setSubmitError(error);
+            }
+        }
+    }, [error]);
     const validateField = (name, value) => {
         let error = "";
         switch (name) {
@@ -62,42 +82,20 @@ const Signup = () => {
         const hasErrors = Object.values(errors).some(err => err !== "");
         const hasEmptyFields = Object.values(formData).some(val => val === "");
         if (!hasErrors && !hasEmptyFields) {
-            setIsLoading(true);
             setSubmitError('');
-            try {
-                const phone = formData.phone.startsWith('+20') 
-                    ? formData.phone 
-                    : `+20${formData.phone}`;
-                
-                const response = await apiService.register(
-                    formData.name,
-                    formData.email,
-                    formData.password,
-                    phone
-                );
-                
-                apiService.setToken(response.token);
-                dispatch(loginSuccess({
-                    id: response.id,
-                    name: response.name,
-                    email: response.email,
-                    phone: response.phone,
-                    token: response.token
-                }));
-                navigate('/profile-setup');
-            } catch (error) {
-                console.log('Registration error:', error);
-                // Handle specific error messages
-                const errorMsg = error.message || '';
-                console.log('Error message:', errorMsg);
-                if (errorMsg.toLowerCase().includes('already taken')) {
-                    setSubmitError('هذا الإيميل مستخدم من قبل! هل تريد تسجيل دخول؟');
-                } else {
-                    setSubmitError(errorMsg || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
-                }
-            } finally {
-                setIsLoading(false);
-            }
+            dispatch(clearError());
+            
+            const phone = formData.phone.startsWith('+20') 
+                ? formData.phone 
+                : `+20${formData.phone}`;
+            
+            dispatch(registerUser({
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+              phone: phone,
+              role: formData.role,
+            }));
         }
         else {
             alert("Please fix the errors before continuing.");
@@ -134,6 +132,43 @@ const Signup = () => {
 
             <Input label="Email" name="email" type="email" icon={<Mail size={18} className="text-gray-400"/>} placeholder="you@example.com" value={formData.email} onChange={handleChange} error={errors.email} required/>
 
+            <div className="space-y-3">
+              <label className="block text-sm font-bold text-black">I am</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className={`rounded-xl border p-4 text-left transition-all ${formData.role === USER_ROLES.ROOMMATE ? 'border-black bg-black text-white shadow-lg' : 'border-gray-200 bg-white text-black hover:border-gray-400 hover:shadow-md'}`}
+                  onClick={() => setFormData((current) => ({ ...current, role: USER_ROLES.ROOMMATE }))}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`rounded-xl p-2 ${formData.role === USER_ROLES.ROOMMATE ? 'bg-white/15' : 'bg-gray-100'}`}>
+                      <Users size={18} />
+                    </div>
+                    <strong>Looking for roommate</strong>
+                  </div>
+                  <p className={`text-sm ${formData.role === USER_ROLES.ROOMMATE ? 'text-white/75' : 'text-gray-600'}`}>
+                    Create a personal profile, browse compatible people, and find your next shared home.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  className={`rounded-xl border p-4 text-left transition-all ${formData.role === USER_ROLES.LANDLORD ? 'border-black bg-black text-white shadow-lg' : 'border-gray-200 bg-white text-black hover:border-gray-400 hover:shadow-md'}`}
+                  onClick={() => setFormData((current) => ({ ...current, role: USER_ROLES.LANDLORD }))}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`rounded-xl p-2 ${formData.role === USER_ROLES.LANDLORD ? 'bg-white/15' : 'bg-gray-100'}`}>
+                      <Building2 size={18} />
+                    </div>
+                    <strong>Offering a place</strong>
+                  </div>
+                  <p className={`text-sm ${formData.role === USER_ROLES.LANDLORD ? 'text-white/75' : 'text-gray-600'}`}>
+                    Manage listings, respond to interested renters, and publish premium property pages.
+                  </p>
+                </button>
+              </div>
+            </div>
+
             {/* Password with Eye Toggle */}
             <div className="relative">
               <Input label="Password" name="password" type={showPassword ? "text" : "password"} icon={<Lock size={18} className="text-gray-400"/>} placeholder="••••••••" value={formData.password} onChange={handleChange} error={errors.password} required/>
@@ -159,7 +194,9 @@ const Signup = () => {
               </div>
             )}
 
-            <Button type="submit" fullWidth variant="primary" size="lg">Continue</Button>
+            <Button type="submit" fullWidth variant="primary" size="lg" disabled={loading}>
+              {loading ? 'Creating account...' : 'Continue'}
+            </Button>
           </form>
 
           <div className="mt-6 text-center border-t border-gray-100 pt-6">

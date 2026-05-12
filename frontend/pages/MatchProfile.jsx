@@ -1,24 +1,40 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleSaveRoommate } from '../slices/roommateSlice';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
-import { containerVariants, itemVariants } from '../utils/animations';
+import MatchScore from '../components/MatchScore';
+import SaveButton from '../components/SaveButton';
+import SkeletonCard from '../components/SkeletonCard';
+import { clearSelectedMatch, fetchMatchById } from '../slices/matchSlice';
+
 const MatchProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const roommates = useSelector((state) => state.roommates.list);
-    const saved = useSelector((state) => state.roommates.saved);
-    // Find the roommate by ID
-    const roommate = roommates.find(r => r.id === id);
-    const isSaved = id ? saved.includes(id) : false;
-    const handleSave = () => {
+    const { selectedMatch: roommate, selectedStatus } = useSelector((state) => state.matches);
+
+    React.useEffect(() => {
         if (id) {
-            dispatch(toggleSaveRoommate(id));
+            dispatch(fetchMatchById(id));
         }
-    };
+
+        return () => {
+            dispatch(clearSelectedMatch());
+        };
+    }, [dispatch, id]);
+
+    if (selectedStatus === 'loading' || (!roommate && selectedStatus === 'idle')) {
+        return (
+            <div className="app-container py-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <SkeletonCard />
+                    <SkeletonCard compact />
+                </div>
+            </div>
+        );
+    }
+
     if (!roommate) {
         return (
             <motion.div 
@@ -62,23 +78,23 @@ const MatchProfile = () => {
                                 <img src={`https://i.pravatar.cc/80?img=${roommate.id}`} alt={roommate.name} className="match-avatar"/>
                                 <div>
                                     <h2 className="match-name">{roommate.name}, {roommate.age}</h2>
-                                    <p className="match-occupation">{roommate.occupation} - {roommate.location}</p>
+                                    <p className="match-occupation">{roommate.occupation} - {roommate.locationLabel || roommate.location}</p>
                                 </div>
                             </div>
 
                             <div className="match-compatibility">
-                                <div className="compatibility-label">Compatibility</div>
-                                <div className="compatibility-value">{roommate.matchPercentage}% match</div>
-                                <button className="compatibility-link">View breakdown</button>
+                                <SaveButton profileId={roommate.id} iconOnly={false} />
                             </div>
+                        </div>
+
+                        <div className="match-section">
+                            <MatchScore score={roommate.matchPercentage} breakdown={roommate.matchBreakdown} />
                         </div>
 
                         {/* Bio */}
                         <div className="match-section">
                             <p className="match-bio">
-                                I am a calm and organized person working in {roommate.location}. I usually spend weekdays
-                                working and going to the gym, and I like quiet evenings at home. weekends are more
-                                flexible for outings with friends.
+                                {roommate.bio}
                             </p>
                         </div>
 
@@ -103,22 +119,22 @@ const MatchProfile = () => {
 
                                 <div className="housing-item">
                                     <div className="housing-label">Area</div>
-                                    <div className="housing-value">{roommate.location}</div>
+                                    <div className="housing-value">{roommate.locationLabel || roommate.location}</div>
                                 </div>
 
                                 <div className="housing-item">
                                     <div className="housing-label">Type</div>
-                                    <div className="housing-value">Private room in 3BR flat</div>
+                                    <div className="housing-value">{roommate.housing.type}</div>
                                 </div>
 
                                 <div className="housing-item">
                                     <div className="housing-label">Roommates</div>
-                                    <div className="housing-value">2 male roommates</div>
+                                    <div className="housing-value">{roommate.housing.roommates}</div>
                                 </div>
                             </div>
 
                             <p className="housing-note">
-                                Bills (electricity, gas, internet) are shared equally between roommates at the end of each month.
+                                {roommate.responseTime}. Bills like electricity, gas, and internet are shared equally between roommates.
                             </p>
                         </div>
                     </div>
@@ -128,18 +144,18 @@ const MatchProfile = () => {
                         <div className="pricing-card">
                             <div className="pricing-header">
                                 <div className="pricing-amount">{roommate.budget.toLocaleString()} EGP / month</div>
-                                <div className="pricing-details">Private room - {roommate.location}</div>
+                                <div className="pricing-details">{roommate.housing.type} - {roommate.locationLabel || roommate.location}</div>
                             </div>
 
                             <div className="pricing-info">
                                 <div className="info-item">
-                                    <strong>Same-gender (male only) flat</strong>
+                                    <strong>Same-gender flat</strong>
                                 </div>
                                 <div className="info-item">
-                                    <strong>Minimum stay:</strong> 6 months
+                                    <strong>Minimum stay:</strong> {roommate.housing.minimumStay}
                                 </div>
                                 <div className="info-item">
-                                    <strong>Available from:</strong> 1 March 2025
+                                    <strong>Available from:</strong> {roommate.housing.availableFrom}
                                 </div>
                             </div>
 
@@ -147,9 +163,7 @@ const MatchProfile = () => {
                                 <Button variant="primary" fullWidth className="mb-3" onClick={() => navigate('/messages')}>
                                     Send message
                                 </Button>
-                                <Button variant={isSaved ? 'primary' : 'outline'} fullWidth onClick={handleSave}>
-                                    {isSaved ? 'Saved ✓' : 'Save profile'}
-                                </Button>
+                                <SaveButton profileId={roommate.id} iconOnly={false} className="save-button--full" showLabel />
                             </div>
                         </div>
                     </div>

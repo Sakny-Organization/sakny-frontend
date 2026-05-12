@@ -13,7 +13,7 @@ const Button = ({ children, variant = 'primary', size = 'md', fullWidth = false,
         md: "px-6 py-3 text-base",
         lg: "h-14 px-8 text-lg",
     };
-    return (<motion.button className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`} whileHover={{ scale: variant === 'ghost' ? 1 : 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }} {...props}>
+        return (<motion.button className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`} whileHover={{ scale: variant === 'ghost' ? 1 : 1.02 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.18 }} {...props}>
       {children}
     </motion.button>);
 };

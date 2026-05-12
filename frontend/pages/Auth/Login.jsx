@@ -1,20 +1,35 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginSuccess, loginFailure } from '../../slices/authSlice';
-import apiService from '../../services/api';
+import { loginUser, clearError } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { getPostAuthPath } from '../../utils/userRole';
+
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { isAuthenticated, profileCompleted, loading, error, user } = useSelector((state) => state.auth);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [submitError, setSubmitError] = useState('');
-    const [isloading, setIsLoading] = useState(false);
+
+    // Handle redirect based on auth state and profile completion
+    useEffect(() => {
+        if (isAuthenticated) {
+        navigate(getPostAuthPath({ user, profileCompleted }));
+        }
+    }, [isAuthenticated, navigate, profileCompleted, user]);
+
+    // Sync Redux error with local state
+    useEffect(() => {
+        if (error) {
+            setSubmitError('Invalid email or password');
+        }
+    }, [error]);
     const validateField = (name, value) => {
         let error = "";
         if (name === 'email') {
@@ -44,31 +59,14 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError('');
+        dispatch(clearError());
+        
         if (errors.email || errors.password || !email || !password) {
             setSubmitError('Please fix errors or fill all fields');
             return;
         }
         
-        setIsLoading(true);
-        try {
-            const response = await apiService.login(email, password);
-            apiService.setToken(response.token);
-            
-            // Use user data from backend response
-            dispatch(loginSuccess({
-                id: response.id,
-                name: response.name || email.split('@')[0],
-                email: response.email,
-                phone: response.phone,
-                token: response.token
-            }));
-            navigate('/dashboard');
-        } catch (error) {
-            setSubmitError('Invalid email or password');
-            dispatch(loginFailure());
-        } finally {
-            setIsLoading(false);
-        }
+        dispatch(loginUser({ email, password }));
     };
     return (<div className="flex min-h-screen w-full bg-white">
       <div className="hidden lg:flex lg:w-1/2 relative bg-black flex-col justify-between p-12 lg:p-16 overflow-hidden">
@@ -151,8 +149,8 @@ Back to Home          </Link>
               </label>
             </div>
 
-            <Button type="submit" fullWidth variant="primary" size="lg" className="h-12 bg-black hover:bg-gray-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all">
-              Login to Sakny
+            <Button type="submit" fullWidth variant="primary" size="lg" isLoading={loading} className="h-12 bg-black hover:bg-gray-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all">
+              {loading ? 'Logging in...' : 'Login to Sakny'}
             </Button>
           </form>
 

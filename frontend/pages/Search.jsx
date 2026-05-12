@@ -1,256 +1,226 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setFilters, resetFilters } from '../slices/roommateSlice';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
-import { Filter, X, List } from 'lucide-react';
-import { containerVariants, itemVariants } from '../utils/animations';
+import EmptyState from '../components/EmptyState';
+import SkeletonCard from '../components/SkeletonCard';
+import PageTransition from '../components/common/PageTransition';
+import { fetchMatches, resetFilters, setSortBy, updateFilters } from '../slices/matchSlice';
+import searchService from '../services/searchService';
+import { Building2, Filter, RotateCcw, Search as SearchIcon, SlidersHorizontal, Users, X } from 'lucide-react';
+import { filterPanelVariants } from '../utils/animations';
+import Properties from './properties/Properties';
+
+const filterOptions = searchService.getSearchFilterOptions();
 
 const Search = () => {
     const dispatch = useDispatch();
-    const { list, filters } = useSelector((state) => state.roommates);
-    const [showFilters, setShowFilters] = useState(false);
-    const [sortBy, setSortBy] = useState('match');
-    
-    const filteredList = list.filter(item => {
-        const matchesGender = filters.gender === 'All' || item.gender === filters.gender;
-        const matchesBudget = item.budget >= filters.minBudget && item.budget <= filters.maxBudget;
-        const matchesLocation = filters.location === '' || item.location.toLowerCase().includes(filters.location.toLowerCase());
-        const matchesLifestyle = filters.lifestyle.length === 0 ||
-            filters.lifestyle.every(trait => item.tags.includes(trait));
-        return matchesGender && matchesBudget && matchesLocation && matchesLifestyle;
-    }).sort((a, b) => {
-        if (sortBy === 'price-low') return a.budget - b.budget;
-        if (sortBy === 'price-high') return b.budget - a.budget;
-        if (sortBy === 'match') return b.matchPercentage - a.matchPercentage;
-        return 0;
-    });
-    
-    const handleGenderChange = (e) => {
-        dispatch(setFilters({ gender: e.target.value }));
-    };
-    
-    const handleBudgetChange = (e) => {
-        dispatch(setFilters({ maxBudget: Number(e.target.value) }));
-    };
-    
-    const handleLifestyleToggle = (trait) => {
-        const newLifestyle = filters.lifestyle.includes(trait)
-            ? filters.lifestyle.filter(t => t !== trait)
-            : [...filters.lifestyle, trait];
-        dispatch(setFilters({ lifestyle: newLifestyle }));
-    };
-    
-    const activeFilters = [];
-    if (filters.location) {
-        activeFilters.push({ label: `Location: ${filters.location}`, key: 'location' });
-    }
-    if (filters.maxBudget < 9000 || filters.minBudget > 0) {
-        activeFilters.push({
-            label: `Budget: ${filters.minBudget.toLocaleString()} - ${filters.maxBudget.toLocaleString()} EGP`,
-            key: 'budget'
-        });
-    }
-    if (filters.gender !== 'All') {
-        activeFilters.push({ label: `Gender: ${filters.gender} only`, key: 'gender' });
-    }
-    filters.lifestyle.forEach(trait => {
-        activeFilters.push({ label: trait, key: `lifestyle-${trait}`, type: 'lifestyle', trait });
-    });
-    
-    const removeFilter = (filter) => {
-        if (filter.key === 'location') {
-            dispatch(setFilters({ location: '' }));
-        } else if (filter.key === 'budget') {
-            dispatch(setFilters({ minBudget: 0, maxBudget: 9000 }));
-        } else if (filter.key === 'gender') {
-            dispatch(setFilters({ gender: 'All' }));
-        } else if (filter.type === 'lifestyle') {
-            dispatch(setFilters({
-                lifestyle: filters.lifestyle.filter(t => t !== filter.trait)
-            }));
+    const { items, filters, status, sortBy, meta } = useSelector((state) => state.matches);
+    const [showFilters, setShowFilters] = React.useState(false);
+    const [activeTab, setActiveTab] = React.useState('roommates');
+
+    React.useEffect(() => {
+        dispatch(fetchMatches(filters));
+    }, [dispatch, filters]);
+
+    const sortedItems = React.useMemo(() => {
+        const nextItems = [...items];
+        if (sortBy === 'price-low') return nextItems.sort((left, right) => left.budget - right.budget);
+        if (sortBy === 'price-high') return nextItems.sort((left, right) => right.budget - left.budget);
+        return nextItems.sort((left, right) => right.matchPercentage - left.matchPercentage);
+    }, [items, sortBy]);
+
+    const activeFilters = React.useMemo(() => {
+        const current = [];
+        if (filters.city) current.push({ key: 'city', label: `City: ${filters.city}` });
+        if (filters.gender !== 'All') current.push({ key: 'gender', label: `Gender: ${filters.gender}` });
+        if (filters.smoking !== 'Any') current.push({ key: 'smoking', label: `Smoking: ${filters.smoking}` });
+        if (filters.pets !== 'Any') current.push({ key: 'pets', label: `Pets: ${filters.pets}` });
+        if (filters.cleanliness !== 'Any') current.push({ key: 'cleanliness', label: `Cleanliness: ${filters.cleanliness}` });
+        if (filters.budgetRange.min !== 500 || filters.budgetRange.max !== 9000) {
+            current.push({ key: 'budget', label: `Budget: ${filters.budgetRange.min.toLocaleString()} - ${filters.budgetRange.max.toLocaleString()} EGP` });
         }
+        filters.lifestyle.forEach((trait) => current.push({ key: `lifestyle-${trait}`, type: 'lifestyle', trait, label: trait }));
+        return current;
+    }, [filters]);
+
+    const removeFilter = (filter) => {
+        if (filter.key === 'city') dispatch(updateFilters({ city: '' }));
+        if (filter.key === 'gender') dispatch(updateFilters({ gender: 'All' }));
+        if (filter.key === 'smoking') dispatch(updateFilters({ smoking: 'Any' }));
+        if (filter.key === 'pets') dispatch(updateFilters({ pets: 'Any' }));
+        if (filter.key === 'cleanliness') dispatch(updateFilters({ cleanliness: 'Any' }));
+        if (filter.key === 'budget') dispatch(updateFilters({ budgetRange: { min: 500, max: 9000 } }));
+        if (filter.type === 'lifestyle') dispatch(updateFilters({ lifestyle: filters.lifestyle.filter((item) => item !== filter.trait) }));
     };
-    
-    return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="app-container"
-        >
-            {/* Header with Filter Pills */}
-            <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">
-                    Search roommates and rooms
-                </h1>
 
-                {/* Active Filter Pills */}
-                <div className="flex flex-wrap items-center gap-3">
-                    {activeFilters.map((filter) => (
-                        <div key={filter.key} className="filter-pill">
-                            <span>{filter.label}</span>
-                            <button 
-                                onClick={() => removeFilter(filter)} 
-                                className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
-                            >
-                                <X size={14}/>
-                            </button>
-                        </div>
-                    ))}
+    const renderFilterPanel = () => (
+        <div className="search-panel__content">
+            <div className="search-panel__header">
+                <h3><Filter size={16} /> Filters</h3>
+                <button type="button" className="search-panel__reset" onClick={() => dispatch(resetFilters())}>
+                    <RotateCcw size={14} /> Reset
+                </button>
+            </div>
 
-                    {activeFilters.length === 0 && (
-                        <p className="text-gray-500 text-sm">No filters applied</p>
-                    )}
+            <div className="search-panel__section">
+                <label>City</label>
+                <Input placeholder="Cairo, Giza, Alexandria" value={filters.city} onChange={(event) => dispatch(updateFilters({ city: event.target.value }))} />
+            </div>
 
-                    {/* List View Toggle */}
-                    <button className="ml-auto flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full text-sm hover:bg-gray-50 transition-colors">
-                        <List size={16}/>
-                        List
-                    </button>
+            <div className="search-panel__section">
+                <label>Budget range</label>
+                <div className="search-budget-grid">
+                    <Input type="number" min="500" max="9000" value={filters.budgetRange.min} onChange={(event) => dispatch(updateFilters({ budgetRange: { min: Number(event.target.value) || 500 } }))} />
+                    <Input type="number" min="500" max="9000" value={filters.budgetRange.max} onChange={(event) => dispatch(updateFilters({ budgetRange: { max: Number(event.target.value) || 9000 } }))} />
                 </div>
             </div>
 
-            <motion.div 
-                className="grid grid-cols-1 lg:grid-cols-4 gap-8"
-                variants={containerVariants}
-                initial="initial"
-                animate="animate"
-            >
-                {/* Filters Sidebar */}
-                <motion.div className="lg:col-span-1" variants={itemVariants}>
-                    <div className="bg-white rounded-lg shadow-lg p-6 sticky top-24">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-black flex items-center gap-2">
-                                <Filter size={18}/> Filters
-                            </h3>
-                            <button 
-                                onClick={() => dispatch(resetFilters())} 
-                                className="text-xs text-gray-600 font-medium hover:text-black transition-colors"
-                            >
-                                Reset all
-                            </button>
+            <div className="search-panel__section">
+                <label>Gender</label>
+                <select className="search-select" value={filters.gender} onChange={(event) => dispatch(updateFilters({ gender: event.target.value }))}>
+                    <option value="All">Any</option>
+                    <option value="Male">Male only</option>
+                    <option value="Female">Female only</option>
+                </select>
+            </div>
+
+            <div className="search-panel__section">
+                <label>Lifestyle</label>
+                <div className="search-chip-group">
+                    {filterOptions.lifestyle.map((trait) => (
+                        <button key={trait} type="button" className={`search-chip ${filters.lifestyle.includes(trait) ? 'is-active' : ''}`} onClick={() => dispatch(updateFilters({ lifestyle: filters.lifestyle.includes(trait) ? filters.lifestyle.filter((item) => item !== trait) : [...filters.lifestyle, trait] }))}>
+                            {trait}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="search-panel__section">
+                <label>Smoking</label>
+                <div className="search-chip-group">
+                    {filterOptions.smoking.map((option) => (
+                        <button key={option} type="button" className={`search-chip ${filters.smoking === option ? 'is-active' : ''}`} onClick={() => dispatch(updateFilters({ smoking: option }))}>
+                            {option}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="search-panel__section">
+                <label>Pets</label>
+                <div className="search-chip-group">
+                    {filterOptions.pets.map((option) => (
+                        <button key={option} type="button" className={`search-chip ${filters.pets === option ? 'is-active' : ''}`} onClick={() => dispatch(updateFilters({ pets: option }))}>
+                            {option}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="search-panel__section">
+                <label>Cleanliness</label>
+                <div className="search-chip-group">
+                    {filterOptions.cleanliness.map((option) => (
+                        <button key={option} type="button" className={`search-chip ${filters.cleanliness === option ? 'is-active' : ''}`} onClick={() => dispatch(updateFilters({ cleanliness: option }))}>
+                            {option}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderRoommateSearch = () => (
+        <>
+            <div className="search-page__hero">
+                <div>
+                    <h1 className="text-3xl font-bold text-black">Find your next roommate</h1>
+                    <p className="text-gray-600">API-ready search state, realistic loading patterns, and compatibility-rich results.</p>
+                </div>
+                <button type="button" className="search-page__filter-toggle" onClick={() => setShowFilters((current) => !current)}>
+                    <SlidersHorizontal size={16} /> Filters
+                </button>
+            </div>
+
+            <div className="search-page__active-filters">
+                {activeFilters.length === 0 ? <span className="search-page__empty-filter-copy">No active filters</span> : activeFilters.map((filter) => (<button key={filter.key} type="button" className="search-page__pill" onClick={() => removeFilter(filter)}>
+                    <span>{filter.label}</span>
+                    <X size={14} />
+                </button>))}
+            </div>
+
+            <AnimatePresence>
+                {showFilters && (<motion.div className="search-panel search-panel--mobile" variants={filterPanelVariants} initial="closed" animate="open" exit="closed">
+                    {renderFilterPanel()}
+                </motion.div>)}
+            </AnimatePresence>
+
+            <div className="search-layout">
+                <aside className="search-panel search-panel--desktop">
+                    {renderFilterPanel()}
+                </aside>
+
+                <section className="search-results">
+                    <div className="search-results__toolbar">
+                        <div>
+                            <strong>{status === 'loading' ? 'Loading matches...' : `${meta.total || sortedItems.length} results`}</strong>
+                            <p>{meta.hasActiveFilters ? 'Filtered for your current preferences' : 'Showing the full recommendation pool'}</p>
                         </div>
-
-                        <div className="space-y-6">
-                            {/* Location */}
-                            <div>
-                                <label className="block text-sm font-medium text-black mb-2">Location</label>
-                                <Input 
-                                    placeholder="Cairo, Giza..." 
-                                    value={filters.location} 
-                                    onChange={(e) => dispatch(setFilters({ location: e.target.value }))}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Enter city or neighborhood</p>
-                            </div>
-
-                            {/* Budget */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-sm font-medium text-black">Budget (EGP/month)</label>
-                                    <span className="text-sm text-gray-600">{filters.maxBudget.toLocaleString()}</span>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="500" 
-                                    max="9000" 
-                                    step="500" 
-                                    value={filters.maxBudget} 
-                                    onChange={handleBudgetChange} 
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
-                                />
-                                <div className="flex justify-between mt-1 text-xs text-gray-400">
-                                    <span>500</span>
-                                    <span>9,000+</span>
-                                </div>
-                            </div>
-
-                            {/* Gender */}
-                            <div>
-                                <label className="block text-sm font-medium text-black mb-2">Gender preference</label>
-                                <select 
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3" 
-                                    value={filters.gender} 
-                                    onChange={handleGenderChange}
-                                >
-                                    <option value="All">Any</option>
-                                    <option value="Male">Male only</option>
-                                    <option value="Female">Female only</option>
-                                </select>
-                            </div>
-
-                            {/* Lifestyle */}
-                            <div>
-                                <label className="block text-sm font-medium text-black mb-2">Lifestyle</label>
-                                <div className="space-y-2">
-                                    {[
-                                        { label: 'Non-smoker', trait: 'Non-smoker' },
-                                        { label: 'Quiet', trait: 'Quiet' },
-                                        { label: 'Pet-friendly', trait: 'Pet friendly' },
-                                        { label: 'Clean', trait: 'Clean' },
-                                        { label: 'Night owl', trait: 'Night owl' }
-                                    ].map((item) => (
-                                        <label key={item.trait} className="flex items-center gap-2 text-sm cursor-pointer">
-                                            <input 
-                                                type="checkbox" 
-                                                className="rounded border-gray-300 text-black focus:ring-black" 
-                                                checked={filters.lifestyle.includes(item.trait)} 
-                                                onChange={() => handleLifestyleToggle(item.trait)}
-                                            />
-                                            <span className="text-gray-700">{item.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Results Grid */}
-                <motion.div className="lg:col-span-3" variants={itemVariants}>
-                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <p className="text-gray-600">
-                            Showing <strong>{filteredList.length}</strong> {filteredList.length === 1 ? 'result' : 'results'} for your preference
-                        </p>
-
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-500 whitespace-nowrap">Sort by:</label>
-                            <select 
-                                className="text-sm border-gray-300 rounded-lg focus:ring-black focus:border-black py-1.5 px-3 border bg-white" 
-                                value={sortBy} 
-                                onChange={(e) => setSortBy(e.target.value)}
-                            >
-                                <option value="match">Best Match</option>
-                                <option value="price-low">Price: Low to High</option>
-                                <option value="price-high">Price: High to Low</option>
+                        <div className="search-results__sort">
+                            <SearchIcon size={16} />
+                            <select className="search-select" value={sortBy} onChange={(event) => dispatch(setSortBy(event.target.value))}>
+                                <option value="match">Best match</option>
+                                <option value="price-low">Price: low to high</option>
+                                <option value="price-high">Price: high to low</option>
                             </select>
                         </div>
                     </div>
 
-                    {filteredList.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {filteredList.map((roommate) => (
-                                <RoommateCard key={roommate.id} roommate={roommate}/>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
-                            <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-                                <X size={48}/>
-                            </div>
-                            <h3 className="text-lg font-semibold text-black mb-2">No matches found</h3>
-                            <p className="text-gray-600 mb-6">Try adjusting your filters to see more results.</p>
-                            <Button variant="outline" onClick={() => dispatch(resetFilters())}>
-                                Clear all filters
-                            </Button>
+                    {status === 'loading' && (
+                        <div className="search-results__grid">
+                            {Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={index} />)}
                         </div>
                     )}
-                </motion.div>
-            </motion.div>
-        </motion.div>
+
+                    {status !== 'loading' && sortedItems.length > 0 && (
+                        <div className="search-results__grid">
+                            {sortedItems.map((roommate) => (<RoommateCard key={roommate.id} roommate={roommate} />))}
+                        </div>
+                    )}
+
+                    {status !== 'loading' && sortedItems.length === 0 && (
+                        <EmptyState
+                            icon={<SearchIcon size={28} />}
+                            title="No matches found"
+                            description="Try widening your budget range, switching city, or clearing one of the preference filters."
+                            actionLabel="Clear filters"
+                            onAction={() => dispatch(resetFilters())}
+                        />
+                    )}
+                </section>
+            </div>
+        </>
     );
+
+    return (<PageTransition>
+        <div className="app-container search-page">
+            <div className="search-tabs">
+                <button type="button" className={`search-tabs__item ${activeTab === 'roommates' ? 'is-active' : ''}`} onClick={() => setActiveTab('roommates')}>
+                    <Users size={16} />
+                    <span>Roommates</span>
+                </button>
+                <button type="button" className={`search-tabs__item ${activeTab === 'properties' ? 'is-active' : ''}`} onClick={() => setActiveTab('properties')}>
+                    <Building2 size={16} />
+                    <span>Properties</span>
+                </button>
+            </div>
+
+            {activeTab === 'roommates' ? renderRoommateSearch() : <Properties embedded />}
+        </div>
+    </PageTransition>);
 };
 
 export default Search;

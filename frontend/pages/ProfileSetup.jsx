@@ -221,36 +221,36 @@ const ProfileSetup = () => {
   const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <div className="py-6 md:py-8">
+    <div className="profile-setup-shell py-6 md:py-8">
       <div className="app-container">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 lg:gap-8">
+        <div className="profile-setup-grid">
           {/* Sidebar */}
-          <aside className="bg-white border border-gray-200 rounded-lg p-6 lg:p-8 h-fit lg:sticky lg:top-24">
+          <aside className="profile-setup-sidebar">
             <div className="mb-6">
               <h1 className="text-lg font-bold text-black">
                 {isEditing ? 'Edit Profile' : 'Profile Setup Wizard'}
               </h1>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="pb-6 border-b border-gray-200">
+            <div className="profile-setup-sidebar-content">
+              <div className="profile-setup-progress-card">
                 <h3 className="text-base font-semibold text-black mb-2">
                   {isEditing ? 'Update your profile' : 'Complete your profile'}
                 </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="profile-setup-progress-copy">
                   {isEditing
                     ? 'Modify your preferences and information.'
                     : 'Improve your roommate matches by sharing how you live.'}
                 </p>
                 {/* Progress bar */}
                 <div className="mt-4">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <div className="profile-setup-progress-meta">
                     <span>Step {currentStep} of {totalSteps}</span>
                     <span>{Math.round(progress)}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="profile-setup-progress-track">
                     <motion.div
-                      className="h-full bg-black rounded-full"
+                      className="profile-setup-progress-fill"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.3 }}
@@ -260,47 +260,23 @@ const ProfileSetup = () => {
               </div>
 
               {/* Desktop step nav */}
-              <nav className="hidden lg:flex flex-col gap-2">
+              <nav className="profile-setup-steps profile-setup-steps--desktop">
                 {steps.map((step) => {
                   const isClickable = step.number <= highestVisited;
                   const completed = isStepComplete(step.number);
                   return (
                     <button
                       key={step.number}
-                      className={`flex items-center gap-3 p-3 rounded-md transition-all text-left border-none ${currentStep === step.number
-                        ? 'bg-black text-white'
-                        : isClickable
-                          ? 'bg-transparent hover:bg-gray-50 cursor-pointer'
-                          : 'bg-transparent cursor-not-allowed opacity-50'
-                        }`}
+                      className={`profile-setup-step ${currentStep === step.number ? 'is-active' : ''} ${completed ? 'is-complete' : ''} ${!isClickable ? 'is-disabled' : ''}`}
                       onClick={() => handleStepClick(step.number)}
                       disabled={!isClickable}
                     >
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 text-sm font-semibold rounded-full flex-shrink-0 transition-all ${currentStep === step.number
-                          ? 'bg-white text-black'
-                          : completed
-                            ? 'bg-black text-white'
-                            : 'bg-gray-100 text-gray-600'
-                          }`}
-                      >
+                      <div className="profile-setup-step-number">
                         {completed ? <Check size={14} /> : step.number}
                       </div>
-                      <div className="flex-1">
-                        <div
-                          className={`text-sm font-medium mb-0.5 ${currentStep === step.number ? 'text-white' : 'text-black'
-                            }`}
-                        >
-                          {step.title}
-                        </div>
-                        <div
-                          className={`text-xs ${currentStep === step.number
-                            ? 'text-white/70'
-                            : 'text-gray-600'
-                            }`}
-                        >
-                          {step.subtitle}
-                        </div>
+                      <div className="profile-setup-step-copy">
+                        <div className="profile-setup-step-title">{step.title}</div>
+                        <div className="profile-setup-step-subtitle">{step.subtitle}</div>
                       </div>
                     </button>
                   );
@@ -308,20 +284,13 @@ const ProfileSetup = () => {
               </nav>
 
               {/* Mobile step dots */}
-              <div className="flex lg:hidden items-center justify-center gap-2">
+              <div className="profile-setup-dots">
                 {steps.map((step) => (
                   <button
                     key={step.number}
                     onClick={() => handleStepClick(step.number)}
                     disabled={step.number > highestVisited}
-                    className={`w-8 h-8 rounded-full text-xs font-semibold transition-all flex items-center justify-center border-none ${currentStep === step.number
-                      ? 'bg-black text-white'
-                      : isStepComplete(step.number)
-                        ? 'bg-black text-white'
-                        : step.number <= highestVisited
-                          ? 'bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
+                    className={`profile-setup-dot ${currentStep === step.number ? 'is-active' : ''} ${isStepComplete(step.number) ? 'is-complete' : ''} ${step.number > highestVisited ? 'is-disabled' : ''}`}
                   >
                     {isStepComplete(step.number) ? <Check size={12} /> : step.number}
                   </button>
@@ -331,7 +300,7 @@ const ProfileSetup = () => {
           </aside>
 
           {/* Main Content */}
-          <div>
+          <div className="profile-setup-main">
             <AnimatePresence mode="wait">
               <React.Fragment key={currentStep}>
                 {renderStepContent()}
@@ -339,7 +308,7 @@ const ProfileSetup = () => {
             </AnimatePresence>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between gap-4 pt-6 border-t border-gray-200">
+            <div className="profile-setup-actions-bar">
               {currentStep > 1 ? (
                 <Button variant="outline" onClick={handleBack}>
                   Back
@@ -359,8 +328,11 @@ const ProfileSetup = () => {
                   : 'Save & continue'}
               </Button>
             </div>
-            {!isCurrentStepValid && Object.keys(stepErrors).length > 0 && (
-              <p className="text-sm text-red-500 mt-2 text-center">
+            {stepErrors.submit && (
+              <p className="profile-setup-error-message">{stepErrors.submit}</p>
+            )}
+            {!stepErrors.submit && !isCurrentStepValid && Object.keys(stepErrors).length > 0 && (
+              <p className="profile-setup-error-message">
                 Please fill in all required fields to continue
               </p>
             )}

@@ -3,11 +3,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../slices/authSlice';
 import Button from '../common/Button';
-import { Menu, X, Bell, LogOut, Home, Search as SearchIcon, MessageCircle, Bookmark } from 'lucide-react';
+import { isLandlordUser } from '../../utils/userRole';
+import { Menu, X, Bell, LogOut, Home, Search as SearchIcon, MessageCircle, Bookmark, Building2, Plus } from 'lucide-react';
 const Navbar = () => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
-    const { saved } = useSelector((state) => state.roommates);
-    const { unreadNotifications, unreadMessages } = useSelector((state) => state.notifications);
+  const savedIds = useSelector((state) => state.saved.ids);
+  const { unreadNotifications } = useSelector((state) => state.notifications);
+  const unreadMessages = useSelector((state) => state.chat.conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0));
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -50,12 +52,20 @@ const Navbar = () => {
         { name: 'How it works', path: '/#how-it-works' },
         { name: 'Testimonials', path: '/#testimonials' },
     ];
-    const navLinks = [
+    const roommateNavLinks = [
         { name: 'Dashboard', path: '/dashboard', icon: <Home size={18}/> },
         { name: 'Find Roommates', path: '/search', icon: <SearchIcon size={18}/> },
         { name: 'Messages', path: '/messages', icon: <MessageCircle size={18}/> },
         { name: 'Saved', path: '/saved', icon: <Bookmark size={18}/> },
     ];
+    const landlordNavLinks = [
+       
+        { name: 'My Listings', path: '/landlord/dashboard', icon: <Building2 size={18}/> },
+        { name: 'Add Property', path: '/landlord/properties/new', icon: <Plus size={18}/> },
+         { name: 'Explore', path: '/properties', icon: <SearchIcon size={18}/> },
+        { name: 'Messages', path: '/messages', icon: <MessageCircle size={18}/> },
+    ];
+    const navLinks = isLandlordUser(user) ? landlordNavLinks : roommateNavLinks;
     const isActive = (path) => location.pathname === path;
     
     return (
@@ -80,7 +90,7 @@ const Navbar = () => {
                 {navLinks.map((link) => {
                 const counts = {
                     '/messages': unreadMessages,
-                    '/saved': saved.length,
+                  '/saved': savedIds.length,
                 };
                 const count = counts[link.path] || 0;
                 return (<Link key={link.path} to={link.path} className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 relative px-3 py-1.5 rounded-lg hover:bg-gray-100/50 ${isActive(link.path)
@@ -132,8 +142,8 @@ const Navbar = () => {
                 </Link>
               </div>)}
 
-            {/* Mobile menu button */}
-            <div className="flex items-center md:hidden">
+            {/* Mobile menu button - Only visible on mobile/tablet */}
+            <div className="hidden items-center md:hidden max-md:flex">
               <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-700 hover:text-black p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
               </button>

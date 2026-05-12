@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Input from '../common/Input';
 import { governorates, citiesByGovernorate } from '../../data/egyptLocations';
-import { ChevronDown, Camera, User } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import AvatarUpload from '../../components/AvatarUpload';
 
 const occupationOptions = ['Student', 'Working professional', 'Freelancer', 'Other'];
 
@@ -10,9 +11,6 @@ const StepBasics = ({ data, onChange, errors = {} }) => {
   const [showCustomOccupation, setShowCustomOccupation] = useState(
     data.occupation && !occupationOptions.slice(0, 3).includes(data.occupation)
   );
-
-  // Local state for avatar preview
-  const [avatarPreview, setAvatarPreview] = useState(data.avatar || '');
 
   const filteredCities = useMemo(() => {
     if (!data.currentGovernorate) return [];
@@ -26,18 +24,6 @@ const StepBasics = ({ data, onChange, errors = {} }) => {
     } else {
       setShowCustomOccupation(false);
       onChange({ ...data, occupation: option });
-    }
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-        onChange({ ...data, avatar: reader.result });
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -55,30 +41,8 @@ const StepBasics = ({ data, onChange, errors = {} }) => {
       </p>
 
       {/* Avatar Upload */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="relative">
-          <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
-            {avatarPreview ? (
-              <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <User size={48} className="text-gray-400 mt-7 mx-auto" />
-            )}
-          </div>
-          <label
-            htmlFor="avatar-upload-step"
-            className="absolute bottom-0 right-0 w-9 h-9 bg-black rounded-full flex items-center justify-center cursor-pointer border-2 border-white hover:bg-gray-800 transition-colors"
-          >
-            <Camera size={18} className="text-white" />
-          </label>
-          <input
-            id="avatar-upload-step"
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </div>
-        <p className="text-sm text-gray-500 mt-3">Upload a profile photo</p>
+      <div className="mb-8">
+        <AvatarUpload value={data.avatar} onChange={(avatar) => onChange({ ...data, avatar })} />
       </div>
 
       {/* Age */}

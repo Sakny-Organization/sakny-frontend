@@ -21,10 +21,15 @@
 @import './components/forms.css';
 @import './components/badges.css';
 @import './components/misc.css';
+@import './components/feature-ui.css';
+@import './components/property-ui.css';
 
 /* 6. Page-Specific Styles */
 @import './pages/profile-setup.css';
 @import './pages/match-profile.css';
+@import './pages/search.css';
+@import './pages/messages.css';
 @import './pages/my-profile.css';
 @import './pages/notifications.css';
 @import './pages/saved-profiles.css';
+@import './pages/landlord.css';

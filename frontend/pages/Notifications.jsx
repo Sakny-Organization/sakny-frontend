@@ -1,63 +1,35 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { markNotificationAsRead, markAllNotificationsAsRead } from '../slices/notificationSlice';
+import { markNotificationAsRead, markAllNotificationsAsRead, setNotificationFilter } from '../slices/notificationSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, MessageCircle, Heart, Eye, UserCheck, Settings } from 'lucide-react';
+import { Bell, Settings } from 'lucide-react';
 import Button from '../components/common/Button';
-import { containerVariants, itemVariants } from '../utils/animations';
+import NotificationItem from '../components/NotificationItem';
+import EmptyState from '../components/EmptyState';
+import PageTransition from '../components/common/PageTransition';
+
 const Notifications = () => {
     const dispatch = useDispatch();
-    const { notifications, unreadNotifications } = useSelector((state) => state.notifications);
-    const [filter, setFilter] = useState('all');
-    const getIcon = (type) => {
-        switch (type) {
-            case 'message':
-                return <MessageCircle size={20}/>;
-            case 'match':
-                return <Heart size={20}/>;
-            case 'view':
-                return <Eye size={20}/>;
-            case 'saved':
-                return <Heart size={20}/>;
-            case 'verification':
-                return <UserCheck size={20}/>;
-            default:
-                return <Bell size={20}/>;
-        }
-    };
-    const getIconColor = (type) => {
-        switch (type) {
-            case 'message':
-                return 'icon-blue';
-            case 'match':
-                return 'icon-red';
-            case 'view':
-                return 'icon-purple';
-            case 'saved':
-                return 'icon-pink';
-            case 'verification':
-                return 'icon-green';
-            default:
-                return 'icon-gray';
-        }
-    };
+    const { notifications, unreadNotifications, activeFilter } = useSelector((state) => state.notifications);
     const handleMarkAsRead = (id) => {
         dispatch(markNotificationAsRead(id));
     };
     const handleMarkAllAsRead = () => {
         dispatch(markAllNotificationsAsRead());
     };
-    const filteredNotifications = filter === 'unread'
-        ? notifications.filter(n => !n.read)
-        : notifications;
+    const filteredNotifications = notifications.filter((notification) => {
+        if (activeFilter === 'all') return true;
+        return notification.category === activeFilter;
+    });
+    const groupedNotifications = filteredNotifications.reduce((groups, notification) => {
+        const key = notification.group || 'Earlier';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(notification);
+        return groups;
+    }, {});
     
-    return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="app-container"
-        >
+    return (<PageTransition>
+        <div className="app-container notification-center">
             {/* Header */}
             <div className="notifications-header">
                 <div>
@@ -77,67 +49,38 @@ const Notifications = () => {
             </div>
 
             {/* Filters */}
-            <div className="notifications-filters">
-                <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+            <div className="notification-tabs">
+                <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => dispatch(setNotificationFilter('all'))}>
                     All
                 </button>
-                <button className={`filter-btn ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>
-                    Unread {unreadNotifications > 0 && `(${unreadNotifications})`}
+                <button className={`filter-btn ${activeFilter === 'messages' ? 'active' : ''}`} onClick={() => dispatch(setNotificationFilter('messages'))}>
+                    Messages
+                </button>
+                <button className={`filter-btn ${activeFilter === 'matches' ? 'active' : ''}`} onClick={() => dispatch(setNotificationFilter('matches'))}>
+                    Matches
                 </button>
             </div>
 
             {/* Notifications List */}
             <AnimatePresence mode="popLayout">
-                <motion.div 
-                    className="notifications-list"
-                    variants={containerVariants}
-                    initial="initial"
-                    animate="animate"
-                >
+                <motion.div className="notifications-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     {filteredNotifications.length > 0 ? (
-                        <AnimatePresence>
-                            {filteredNotifications.map((notification) => (
-                                <motion.div
-                                    key={notification.id}
-                                    className={`notification-item ${!notification.read ? 'unread' : ''}`}
-                                    onClick={() => handleMarkAsRead(notification.id)}
-                                    variants={itemVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit={{ opacity: 0, x: -20 }}
-                                    layout
-                                >
-                                    <div className={`notification-icon ${getIconColor(notification.type)}`}>
-                                        {getIcon(notification.type)}
-                                    </div>
-                                    <div className="notification-content">
-                                        <h3 className="notification-title">{notification.title}</h3>
-                                        <p className="notification-description">{notification.message}</p>
-                                        <span className="notification-time">{notification.timestamp}</span>
-                                    </div>
-                                    {!notification.read && <div className="unread-indicator"/>}
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
+                        Object.entries(groupedNotifications).map(([group, items]) => (<div key={group} className="notification-group">
+                            <div className="notification-group__title">{group}</div>
+                            <AnimatePresence>
+                                {items.map((notification) => (<NotificationItem key={notification.id} notification={notification} onRead={handleMarkAsRead} />))}
+                            </AnimatePresence>
+                        </div>))
                     ) : (
-                        <motion.div 
-                            className="empty-notifications"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                        >
-                            <Bell size={64} className="empty-icon"/>
-                            <h3 className="empty-title">No notifications</h3>
-                            <p className="empty-description">
-                                {filter === 'unread'
-                                    ? "You're all caught up! No unread notifications."
-                                    : "You don't have any notifications yet."}
-                            </p>
-                        </motion.div>
+                        <EmptyState
+                            icon={<Bell size={28} />}
+                            title="No notifications"
+                            description="This feed will surface new messages, high-quality matches, and profile activity as soon as they happen."
+                        />
                     )}
                 </motion.div>
             </AnimatePresence>
-        </motion.div>
-    );
+        </div>
+    </PageTransition>);
 };
 export default Notifications;
