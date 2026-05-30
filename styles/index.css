@@ -1,0 +1,30 @@
+/* ============================================
+   Sakny Design System - Main CSS Entry Point
+   Import all modular CSS files
+   ============================================ */
+
+/* 1. Design Tokens & Variables */
+@import './variables.css';
+
+/* 2. Base Styles & Reset */
+@import './base.css';
+
+/* 3. Layout Utilities */
+@import './utilities.css';
+
+/* 4. Animations */
+@import './animations.css';
+
+/* 5. Components */
+@import './components/buttons.css';
+@import './components/cards.css';
+@import './components/forms.css';
+@import './components/badges.css';
+@import './components/misc.css';
+
+/* 6. Page-Specific Styles */
+@import './pages/profile-setup.css';
+@import './pages/match-profile.css';
+@import './pages/my-profile.css';
+@import './pages/notifications.css';
+@import './pages/saved-profiles.css';
