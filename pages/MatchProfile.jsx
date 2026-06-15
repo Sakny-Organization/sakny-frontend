@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleSaveRoommate } from '../slices/roommateSlice';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
+import VerifiedBadge from '../components/common/VerifiedBadge';
 import { containerVariants, itemVariants } from '../utils/animations';
 const MatchProfile = () => {
     const { id } = useParams();
@@ -61,7 +62,7 @@ const MatchProfile = () => {
                             <div className="match-profile-info">
                                 <img src={`https://i.pravatar.cc/80?img=${roommate.id}`} alt={roommate.name} className="match-avatar"/>
                                 <div>
-                                    <h2 className="match-name">{roommate.name}, {roommate.age}</h2>
+                                    <h2 className="match-name">{roommate.name}, {roommate.age} {roommate.verified && <VerifiedBadge size={22} />}</h2>
                                     <p className="match-occupation">{roommate.occupation} - {roommate.location}</p>
                                 </div>
                             </div>

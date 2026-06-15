@@ -4,12 +4,19 @@ import { useNavigate, Link } from 'react-router-dom';
 import { clearAuthError, registerUser } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { Mail, Lock, User, Camera, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff, Building2, Users } from 'lucide-react';
+import { USER_ROLES } from '../../utils/userRole';
 
 const Signup = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { loading, error: authError } = useSelector((state) => state.auth);
+    const { isAuthenticated, loading, error: authError } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/verify-contact');
+        }
+    }, [isAuthenticated, navigate]);
 
     useEffect(() => {
         dispatch(clearAuthError());
@@ -21,10 +28,10 @@ const Signup = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        role: USER_ROLES.ROOMMATE,
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [avatar, setAvatar] = useState('');
     const [errors, setErrors] = useState({});
     const [submitError, setSubmitError] = useState('');
 
@@ -69,39 +76,36 @@ const Signup = () => {
         }
     };
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => setAvatar(reader.result);
-            reader.readAsDataURL(file);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const hasErrors = Object.values(errors).some(err => err !== "");
-        const hasEmptyFields = Object.values(formData).some(val => val === "");
+        const hasEmptyFields = Object.entries(formData)
+            .filter(([k]) => k !== 'role')
+            .some(([, v]) => v === "");
 
         if (hasErrors || hasEmptyFields) {
             setSubmitError('Please fix the errors before continuing.');
             return;
         }
 
-        const normalizedPhone = `+20${formData.phone}`;
-        const generatedAvatar = avatar || `https://i.pravatar.cc/150?u=${formData.email}`;
+        const phone = formData.phone.startsWith('+20')
+            ? formData.phone
+            : `+20${formData.phone}`;
 
         try {
             await dispatch(registerUser({
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
-                phone: normalizedPhone,
-                avatar: generatedAvatar,
+                phone: phone,
+                role: formData.role,
             })).unwrap();
-            navigate('/profile-setup');
         } catch (error) {
-            setSubmitError(error || 'Unable to create account right now.');
+            if (typeof error === 'string' && error.toLowerCase().includes('already taken')) {
+                setSubmitError('This email or phone is already registered. Would you like to log in instead?');
+            } else {
+                setSubmitError(error || 'Unable to create account right now.');
+            }
         }
     };
 
@@ -118,22 +122,9 @@ const Signup = () => {
             <p className="text-gray-600">Join the community and find your next roommate.</p>
           </div>
 
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
-                {avatar ? <img src={avatar} alt="Profile" className="w-full h-full object-cover"/> : <User size={40} className="text-gray-400 mt-5 mx-auto"/>}
-              </div>
-              <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 w-8 h-8 bg-black rounded-full flex items-center justify-center cursor-pointer border-2 border-white">
-                <Camera size={16} className="text-white"/>
-              </label>
-              <input id="avatar-upload" type="file" accept="image/*" onChange={handleImageUpload} className="hidden"/>
-            </div>
-          </div>
-
           <form className="space-y-5" onSubmit={handleSubmit}>
             <Input label="Full name" name="name" type="text" icon={<User size={18} className="text-gray-400"/>} placeholder="Ahmed Mohamed" value={formData.name} onChange={handleChange} error={errors.name} required/>
 
-            {/* Mobile Number Section */}
             <div className="space-y-2">
               <label className="block text-sm font-bold text-black">Mobile number</label>
               <div className="flex gap-2">
@@ -148,7 +139,43 @@ const Signup = () => {
 
             <Input label="Email" name="email" type="email" icon={<Mail size={18} className="text-gray-400"/>} placeholder="you@example.com" value={formData.email} onChange={handleChange} error={errors.email} required/>
 
-            {/* Password with Eye Toggle */}
+            <div className="space-y-3">
+              <label className="block text-sm font-bold text-black">I am</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className={`rounded-xl border p-4 text-left transition-all ${formData.role === USER_ROLES.ROOMMATE ? 'border-black bg-black text-white shadow-lg' : 'border-gray-200 bg-white text-black hover:border-gray-400 hover:shadow-md'}`}
+                  onClick={() => setFormData((current) => ({ ...current, role: USER_ROLES.ROOMMATE }))}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`rounded-xl p-2 ${formData.role === USER_ROLES.ROOMMATE ? 'bg-white/15' : 'bg-gray-100'}`}>
+                      <Users size={18} />
+                    </div>
+                    <strong>Looking for roommate</strong>
+                  </div>
+                  <p className={`text-sm ${formData.role === USER_ROLES.ROOMMATE ? 'text-white/75' : 'text-gray-600'}`}>
+                    Create a personal profile, browse compatible people, and find your next shared home.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  className={`rounded-xl border p-4 text-left transition-all ${formData.role === USER_ROLES.LANDLORD ? 'border-black bg-black text-white shadow-lg' : 'border-gray-200 bg-white text-black hover:border-gray-400 hover:shadow-md'}`}
+                  onClick={() => setFormData((current) => ({ ...current, role: USER_ROLES.LANDLORD }))}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`rounded-xl p-2 ${formData.role === USER_ROLES.LANDLORD ? 'bg-white/15' : 'bg-gray-100'}`}>
+                      <Building2 size={18} />
+                    </div>
+                    <strong>Offering a place</strong>
+                  </div>
+                  <p className={`text-sm ${formData.role === USER_ROLES.LANDLORD ? 'text-white/75' : 'text-gray-600'}`}>
+                    Manage listings, respond to interested renters, and publish premium property pages.
+                  </p>
+                </button>
+              </div>
+            </div>
+
             <div className="relative">
               <Input label="Password" name="password" type={showPassword ? "text" : "password"} icon={<Lock size={18} className="text-gray-400"/>} placeholder="••••••••" value={formData.password} onChange={handleChange} error={errors.password} required/>
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[38px] text-gray-400">
@@ -164,7 +191,10 @@ const Signup = () => {
             </div>
 
             {(submitError || authError) && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 {submitError || authError}
               </div>
             )}

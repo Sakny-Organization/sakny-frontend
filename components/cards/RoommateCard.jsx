@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
+import VerifiedBadge from '../common/VerifiedBadge';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleSaveRoommate } from '../../slices/roommateSlice';
 import { Bookmark, MapPin, Briefcase } from 'lucide-react';
@@ -47,7 +48,7 @@ const RoommateCard = ({ roommate }) => {
         {/* Overlay Info (Mobile/Quick Glance) */}
         <div className="absolute bottom-3 left-3 text-white">
           <div className="flex items-center gap-1.5 mb-1">
-            <h3 className="text-xl font-extrabold leading-tight text-white drop-shadow-md tracking-wide">{roommate.name}</h3>
+            <h3 className="text-xl font-extrabold leading-tight text-white drop-shadow-md tracking-wide">{roommate.name}{roommate.verified && <VerifiedBadge size={18} />}</h3>
             <span className="text-white font-bold text-sm ml-1 opacity-100 drop-shadow-sm">• {roommate.age} years</span>
           </div>
           <p className="text-white/80 text-xs flex items-center gap-1">

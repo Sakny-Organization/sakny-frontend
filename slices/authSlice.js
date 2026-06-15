@@ -81,13 +81,16 @@ export const loginUser = createAsyncThunk(
 
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
-  async ({ name, email, password, phone, avatar }, { rejectWithValue }) => {
+  async ({ name, email, password, phone, role }, { rejectWithValue }) => {
     try {
-      const response = await register({ name, email, password, phone });
+      const housingRole = role ? role.toUpperCase() : "ROOMMATE";
+      const response = await register({ name, email, password, phone, housingRole });
       const user = {
+        ...response,
         name,
         email,
-        avatar,
+        phone,
+        housingRole,
       };
 
       const session = {

@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
+import VerifiedBadge from '../components/common/VerifiedBadge';
 import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
 import { getMyProfile, updateProfile, getMyContactInfo } from '../services/profileApi';
 import { containerVariants, itemVariants } from '../utils/animations';
@@ -119,9 +120,9 @@ const MyProfile = () => {
             ].filter(Boolean),
         },
         verified: {
-            email: true, // Assuming true if they can log in
-            phone: !!contactInfo.phone,
-            id: false,
+            email: Boolean(profile.isEmailVerified),
+            phone: Boolean(profile.isPhoneVerified),
+            id: Boolean(profile.isVerified),
         },
         stats: {
             profileViews: 0, // Backend doesn't provide these yet
@@ -204,7 +205,7 @@ const MyProfile = () => {
                                             />
                                         </div>
                                     ) : (
-                                        <h2 className="profile-name-large">{profileData.name}, {profileData.age}</h2>
+                                        <h2 className="profile-name-large">{profileData.name}, {profileData.age} {profileData.verified.id && <VerifiedBadge size={26} />}</h2>
                                     )}
                                     <div className="profile-meta">
                                         <span className="meta-item">
@@ -219,15 +220,27 @@ const MyProfile = () => {
 
                                     {/* Verification Badges */}
                                     <div className="verification-badges">
-                                        {profileData.verified.email && (<span className="verified-badge">
+                                        {profileData.verified.email ? (
+                                            <span className="verified-badge">
                                                 <CheckCircle size={14}/>
                                                 Email verified
-                                            </span>)}
-                                        {profileData.verified.phone && (<span className="verified-badge">
+                                            </span>
+                                        ) : (
+                                            <button className="verify-btn" onClick={() => navigate('/verify-contact', { state: { channel: 'EMAIL', identifier: profileData.email } })}>
+                                                Verify email
+                                            </button>
+                                        )}
+                                        {profileData.verified.phone ? (
+                                            <span className="verified-badge">
                                                 <CheckCircle size={14}/>
                                                 Phone verified
-                                            </span>)}
-                                        {!profileData.verified.id && (<button className="verify-btn">
+                                            </span>
+                                        ) : (
+                                            <button className="verify-btn" onClick={() => navigate('/verify-contact', { state: { channel: 'PHONE', identifier: contactInfo.phone || authUser?.phone } })}>
+                                                Verify phone
+                                            </button>
+                                        )}
+                                        {!profileData.verified.id && (<button className="verify-btn" onClick={() => navigate('/verify-id')}>
                                                 Verify ID
                                             </button>)}
                                     </div>

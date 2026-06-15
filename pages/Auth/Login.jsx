@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { clearAuthError, loginUser } from '../../slices/authSlice';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -9,7 +9,11 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { loading, error: authError } = useSelector((state) => state.auth);
+    const [successMessage, setSuccessMessage] = useState(
+        location.state?.resetSuccess ? 'Password reset successfully! Please log in.' : ''
+    );
 
     useEffect(() => {
         dispatch(clearAuthError());
@@ -124,6 +128,12 @@ Back to Home          </Link>
           </div>
 
 
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+              {successMessage}
+            </div>
+          )}
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-1">
               <label className="text-sm font-semibold text-gray-900">Email or Egyptian phone</label>
@@ -133,9 +143,9 @@ Back to Home          </Link>
             <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-gray-900">Password</label>
-                <a href="#" className="text-xs font-semibold text-gray-500 hover:text-black transition-colors">
+                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-semibold text-gray-500 hover:text-black transition-colors">
                   Forgot password?
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <Input name="password" type={showPassword ? "text" : "password"} value={password} onChange={handlePasswordChange} error={errors.password} required placeholder="••••••••" className="bg-gray-50 border-gray-200 focus:bg-white transition-all h-12" noLabel/>
