@@ -1,14 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
-import { Building2, Eye, Key, MessageCircle, Plus, Search, Users } from 'lucide-react';
+import { Building2, Eye, Key, MessageCircle, Plus, Search, TrendingUp, Users } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import PropertyGrid from '../../components/property/PropertyGrid';
-import { fetchMyProperties, deleteProperty } from '../../slices/propertySlice';
-import { PROPERTY_STATUSES } from '../../services/propertyService';
+import propertyService, { PROPERTY_STATUSES, resolveOwnerProfile } from '../../services/propertyService';
 
 const AnimatedCounter = ({ value }) => {
   const motionValue = useMotionValue(0);
@@ -34,32 +33,39 @@ const statCards = [
 
 const LandlordDashboard = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { myListings, myListingsLoading } = useSelector((state) => state.properties);
-  const [filters, setFilters] = React.useState({ query: '', status: 'all' });
-
-  React.useEffect(() => {
-    dispatch(fetchMyProperties());
-  }, [dispatch]);
-
-  // Derive stats from the real listings data
-  const stats = React.useMemo(() => ({
-    totalListings: myListings.length,
-    availableListings: myListings.filter((p) => p.status?.toLowerCase() === 'available').length,
-    rentedListings: myListings.filter((p) => p.status?.toLowerCase() === 'rented').length,
+  const owner = React.useMemo(() => resolveOwnerProfile(user), [user]);
+  const [stats, setStats] = React.useState({
+    totalListings: 0,
+    availableListings: 0,
+    rentedListings: 0,
     totalViews: 0,
     newMessages: 0,
-  }), [myListings]);
+  });
+  const [properties, setProperties] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [filters, setFilters] = React.useState({ query: '', status: 'all' });
 
-  const filteredProperties = myListings.filter((property) => {
-    const matchesQuery = !filters.query ||
-      `${property.title} ${property.city} ${property.address}`.toLowerCase().includes(filters.query.toLowerCase());
-    const matchesStatus = filters.status === 'all' || property.status?.toLowerCase() === filters.status;
+  const loadDashboard = React.useCallback(async () => {
+    setLoading(true);
+    const [nextStats, nextProperties] = await Promise.all([
+      propertyService.getDashboardStats(owner.id),
+      propertyService.getByOwner(owner.id),
+    ]);
+    setStats(nextStats);
+    setProperties(nextProperties);
+    setLoading(false);
+  }, [owner.id]);
+
+  React.useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const filteredProperties = properties.filter((property) => {
+    const matchesQuery = !filters.query || `${property.title} ${property.city} ${property.address}`.toLowerCase().includes(filters.query.toLowerCase());
+    const matchesStatus = filters.status === 'all' || property.status === filters.status;
     return matchesQuery && matchesStatus;
   });
-
-  const ownerName = user?.name || 'there';
 
   return (
     <DashboardLayout
@@ -71,9 +77,10 @@ const LandlordDashboard = () => {
         <Card className="landlord-dashboard__welcome">
           <div>
             <span className="landlord-dashboard__eyebrow">Overview</span>
-            <h2>Welcome back, {ownerName.split(' ')[0]}.</h2>
+            <h2>Welcome back, {owner.name.split(' ')[0]}.</h2>
             <p>Your listings, availability, and messages — all in one place.</p>
           </div>
+         
         </Card>
       </motion.div>
 
@@ -97,10 +104,11 @@ const LandlordDashboard = () => {
             <h2>Your Listings</h2>
             <p>Edit details, update availability, and track each listing.</p>
           </div>
+          {/* Open portfolio button removed as per user request */}
         </div>
 
         <AnimatePresence mode="wait">
-          {!myListingsLoading && myListings.length === 0 ? (
+          {!loading && properties.length === 0 ? (
             <motion.div key="empty" className="landlord-empty-state" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}>
               <div className="landlord-empty-state__art" />
               <div>
@@ -147,16 +155,18 @@ const LandlordDashboard = () => {
 
               <PropertyGrid
                 properties={filteredProperties}
-                loading={myListingsLoading}
+                loading={loading}
                 mode="owner"
                 onEdit={(property) => navigate(`/landlord/properties/${property.id}/edit`)}
                 onDelete={async (property) => {
-                  await dispatch(deleteProperty(property.id));
+                  await propertyService.remove(property.id);
+                  loadDashboard();
                 }}
                 onViewDetails={(property) => navigate(`/properties/${property.id}`)}
-                onToggleStatus={async () => {
-                  // Status toggle requires a backend PATCH endpoint — not yet implemented
-                  dispatch(fetchMyProperties());
+                onToggleStatus={async (property) => {
+                  const nextStatus = property.status === PROPERTY_STATUSES.RENTED ? PROPERTY_STATUSES.AVAILABLE : PROPERTY_STATUSES.RENTED;
+                  await propertyService.updateStatus(property.id, nextStatus);
+                  loadDashboard();
                 }}
               />
             </motion.div>
