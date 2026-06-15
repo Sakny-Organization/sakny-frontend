@@ -2,28 +2,32 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
 
-const roommateTypeOptions = ['Student', 'Working Professional', "Don't Mind"];
+const roommateTypeOptions = [
+  { value: 'STUDENT', label: 'Student' },
+  { value: 'WORKING_PROFESSIONAL', label: 'Working Professional' },
+  { value: 'DONT_MIND', label: "Don't Mind" },
+];
 
 const prefSmokingOptions = [
-  { value: 'Non-smoker only', label: 'Non-smoker only' },
-  { value: "Don't mind", label: "Don't mind" },
+  { value: 'NON_SMOKER_ONLY', label: 'Non-smoker only' },
+  { value: 'DONT_MIND', label: "Don't mind" },
 ];
 
 const prefPetsOptions = [
-  { value: 'Okay with pets', label: 'Okay with pets' },
-  { value: 'No pets preferred', label: 'No pets preferred' },
+  { value: 'OKAY_WITH_PETS', label: 'Okay with pets' },
+  { value: 'NO_PETS_PREFERRED', label: 'No pets preferred' },
 ];
 
 const prefSleepOptions = [
-  { value: 'Early bird', label: 'Early bird' },
-  { value: 'Night owl', label: 'Night owl' },
-  { value: "Don't mind", label: "Don't mind" },
+  { value: 'EARLY_BIRD', label: 'Early bird' },
+  { value: 'NIGHT_OWL', label: 'Night owl' },
+  { value: 'DONT_MIND', label: "Don't mind" },
 ];
 
 const prefCleanlinessOptions = [
-  { value: 'Very clean', label: 'Very clean' },
-  { value: 'Average or above', label: 'Average or above' },
-  { value: "Don't mind", label: "Don't mind" },
+  { value: 'VERY_CLEAN', label: 'Very clean' },
+  { value: 'AVERAGE_OR_ABOVE', label: 'Average or above' },
+  { value: 'DONT_MIND', label: "Don't mind" },
 ];
 
 const StepRoommatePrefs = ({ data, onChange, errors = {} }) => {

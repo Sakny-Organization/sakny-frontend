@@ -46,15 +46,29 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await authenticate({ email, password });
-      const user = {
+      let user = {
         email,
         name: email.split("@")[0] || "Sakny User",
       };
 
+      let profileCompleted = false;
+      try {
+        const profile = await getMyProfile(response.token);
+        if (profile && profile.data) {
+          user = { ...user, ...profile.data };
+          profileCompleted = true;
+        } else if (profile && profile.age) {
+          user = { ...user, ...profile };
+          profileCompleted = true;
+        }
+      } catch {
+        profileCompleted = false;
+      }
+
       const session = {
         token: response.token,
         user,
-        profileCompleted: false,
+        profileCompleted,
       };
 
       persistSession(session);
@@ -134,6 +148,19 @@ const authSlice = createSlice({
     },
     clearAuthError: (state) => {
       state.error = null;
+    },
+    loginSuccess: (state, action) => {
+      state.loading = false;
+      state.token = localStorage.getItem('token');
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      state.profileCompleted = !!(action.payload?.age || action.payload?.profileCompleted);
+    },
+    loginFailure: (state) => {
+      state.loading = false;
+      state.token = null;
+      state.user = null;
+      state.isAuthenticated = false;
     },
   },
   extraReducers: (builder) => {
@@ -217,6 +244,8 @@ export const {
   updateProfileData,
   clearWelcomeMessage,
   clearAuthError,
+  loginSuccess,
+  loginFailure,
 } = authSlice.actions;
 
 export default authSlice.reducer;

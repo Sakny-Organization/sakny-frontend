@@ -182,10 +182,10 @@ const ProfileSetup = () => {
                     areaName: area
                 })),
                 roommateType: profileData.roommateType, // Backend RoommateType enum
-                prefSmoking: profileData.prefSmoking || 'ANY_STATUS',
-                prefPets: profileData.prefPets || 'ANY_STATUS',
-                prefSleepSchedule: profileData.prefSleepSchedule || 'ANY_SCHEDULE',
-                prefCleanliness: profileData.prefCleanliness || 'ANY_LEVEL'
+                prefSmoking: profileData.prefSmoking || null,
+                prefPets: profileData.prefPets || null,
+                prefSleepSchedule: profileData.prefSleepSchedule || null,
+                prefCleanliness: profileData.prefCleanliness || null
             };
 
             try {
