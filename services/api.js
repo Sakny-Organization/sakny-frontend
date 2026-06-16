@@ -31,7 +31,6 @@ class ApiService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log("API Error Response:", errorData);
         throw new Error(
           errorData.message ||
             errorData.error ||
@@ -60,13 +59,6 @@ class ApiService {
     });
   }
 
-  async refreshToken(refreshToken) {
-    return this.request("/v1/auth/refresh", {
-      method: "POST",
-      body: JSON.stringify({ refreshToken }),
-    });
-  }
-
   async getCurrentUser() {
     const response = await this.request("/v1/profile", {
       method: "GET",
@@ -75,47 +67,10 @@ class ApiService {
   }
 
   async updateUser(userData) {
-    return this.request("/users/me", {
+    return this.request("/v1/profile", {
       method: "PUT",
       body: JSON.stringify(userData),
     });
-  }
-
-  async getRoommates(filters = {}) {
-    const params = new URLSearchParams();
-    if (filters.location) params.append("location", filters.location);
-    if (filters.minBudget) params.append("minBudget", filters.minBudget);
-    if (filters.maxBudget) params.append("maxBudget", filters.maxBudget);
-    if (filters.gender && filters.gender !== "All")
-      params.append("gender", filters.gender);
-    if (filters.lifestyle && filters.lifestyle.length > 0) {
-      filters.lifestyle.forEach((l) => params.append("lifestyle", l));
-    }
-    if (filters.smoking) params.append("smoking", filters.smoking);
-    if (filters.pets) params.append("pets", filters.pets);
-    if (filters.sortBy) params.append("sortBy", filters.sortBy);
-
-    const queryString = params.toString();
-    const response = await this.request(
-      `/v1/search/roommates${queryString ? "?" + queryString : ""}`,
-      { method: "GET" },
-    );
-    return response.data || [];
-  }
-
-  async getRoommateById(id) {
-    const response = await this.request(`/v1/search/roommates/${id}`, {
-      method: "GET",
-    });
-    return response.data;
-  }
-
-  async getRecommendations(limit = 6) {
-    const response = await this.request(
-      `/v1/search/recommendations?limit=${limit}`,
-      { method: "GET" },
-    );
-    return response.data || [];
   }
 
   async sendOtp({ identifier, channel, purpose }) {

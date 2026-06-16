@@ -81,7 +81,7 @@ const RoommateCard = ({ roommate }) => {
           <div className="flex flex-col">
             <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Budget</span>
             <div className="text-lg font-bold text-black">
-              EGP {roommate.budget.toLocaleString()}
+              {typeof roommate.budget === 'number' ? `EGP ${roommate.budget.toLocaleString()}` : roommate.budget}
             </div>
           </div>
 
