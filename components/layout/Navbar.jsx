@@ -112,7 +112,7 @@ const Navbar = () => {
 
                 <Link to="/profile" className="flex items-center gap-3 pl-1">
                   <div className="relative">
-                    <img src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User") + "&background=random"} alt="Profile" className="h-9 w-9 rounded-full border border-gray-200 object-cover shadow-sm transition-transform hover:scale-105"/>
+                    <img src={user?.profilePhotoUrl || user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User") + "&background=random"} alt="Profile" className="h-9 w-9 rounded-full border border-gray-200 object-cover shadow-sm transition-transform hover:scale-105"/>
                     <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
                   <span className="text-sm font-medium hidden sm:inline text-gray-700">{user?.name}</span>
@@ -146,7 +146,7 @@ const Navbar = () => {
           <div className="bg-white/90 backdrop-blur-md border border-gray-200/60 rounded-2xl shadow-xl p-2 space-y-1">
             {isAuthenticated ? (<>
                 <Link to="/profile" className="px-4 py-3 border-b border-gray-100 flex items-center gap-3 mb-1 hover:bg-gray-50 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User")} alt="Profile" className="h-10 w-10 rounded-full border border-gray-200"/>
+                  <img src={user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User")} alt="Profile" className="h-10 w-10 rounded-full border border-gray-200"/>
                   <div>
                     <p className="text-sm font-bold text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email || 'User'}</p>

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
 import VerifiedBadge from '../components/common/VerifiedBadge';
+import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
 import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
 import { getMyProfile, updateProfile, getMyContactInfo } from '../services/profileApi';
 import { containerVariants, itemVariants } from '../utils/animations';
@@ -395,23 +396,7 @@ const MyProfile = () => {
                         </div>
 
                         {/* Profile Completion */}
-                        <div className="completion-card">
-                            <h3 className="card-title">Profile Completion</h3>
-                            <div className="completion-progress">
-                                <div className="progress-bar">
-                                    <div className="progress-fill" style={{ width: `${profile.isComplete ? 100 : authUser.profileCompletion}%` }}/>
-                                </div>
-                                <span className="progress-text">{profile.isComplete ? 100 : authUser.profileCompletion}% Complete</span>
-                            </div>
-                            {(!profile.isComplete) && (<div className="completion-tips">
-                                    <p className="tip-title">Complete your profile to get better matches:</p>
-                                    <ul className="tip-list">
-                                        <li>Add a profile photo</li>
-                                        <li>Verify your phone number</li>
-                                        <li>Add more personality traits</li>
-                                    </ul>
-                                </div>)}
-                        </div>
+                        <ProfileCompletionCard user={profile} />
 
                         {/* Quick Actions */}
                         <div className="actions-card">

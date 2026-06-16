@@ -211,9 +211,13 @@ const authSlice = createSlice({
           state.user = {
             ...state.user,
             ...action.payload,
-            profileCompletion: 100, // If profile is fetched, it's complete
           };
           state.profileCompleted = true;
+          persistSession({
+            token: state.token,
+            user: state.user,
+            profileCompleted: true,
+          });
         }
       })
       .addCase(fetchMyProfile.rejected, (state) => {
