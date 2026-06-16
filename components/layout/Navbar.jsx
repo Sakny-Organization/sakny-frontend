@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../slices/authSlice';
+import { fetchUnreadCount } from '../../slices/notificationSlice';
 import Button from '../common/Button';
+import Avatar from '../common/Avatar';
 import { Menu, X, Bell, LogOut, Home, Search as SearchIcon, MessageCircle, Bookmark } from 'lucide-react';
 const Navbar = () => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const { saved } = useSelector((state) => state.roommates);
-    const { unreadNotifications, unreadMessages } = useSelector((state) => state.notifications);
+    const { unreadCount: unreadNotifications } = useSelector((state) => state.notifications);
+    const { unreadTotal: unreadMessages } = useSelector((state) => state.messages);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchUnreadCount());
+        }
+    }, [dispatch, isAuthenticated]);
+
     const handleLogout = () => {
         dispatch(logout());
         navigate('/');
@@ -110,11 +120,14 @@ const Navbar = () => {
 
                 <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
-                <Link to="/profile" className="flex items-center gap-3 pl-1">
-                  <div className="relative">
-                    <img src={user?.profilePhotoUrl || user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User") + "&background=random"} alt="Profile" className="h-9 w-9 rounded-full border border-gray-200 object-cover shadow-sm transition-transform hover:scale-105"/>
-                    <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white rounded-full"></div>
-                  </div>
+                <Link to="/profile" className="flex items-center gap-3 pl-1 hover:opacity-80 transition-opacity">
+                  <Avatar
+                    src={user?.profilePhotoUrl}
+                    name={user?.name}
+                    size="md"
+                    showOnlineStatus={true}
+                    isOnline={true}
+                  />
                   <span className="text-sm font-medium hidden sm:inline text-gray-700">{user?.name}</span>
                 </Link>
 
@@ -146,7 +159,13 @@ const Navbar = () => {
           <div className="bg-white/90 backdrop-blur-md border border-gray-200/60 rounded-2xl shadow-xl p-2 space-y-1">
             {isAuthenticated ? (<>
                 <Link to="/profile" className="px-4 py-3 border-b border-gray-100 flex items-center gap-3 mb-1 hover:bg-gray-50 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src={user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "User")} alt="Profile" className="h-10 w-10 rounded-full border border-gray-200"/>
+                  <Avatar
+                    src={user?.profilePhotoUrl}
+                    name={user?.name}
+                    size="lg"
+                    showOnlineStatus={true}
+                    isOnline={true}
+                  />
                   <div>
                     <p className="text-sm font-bold text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email || 'User'}</p>

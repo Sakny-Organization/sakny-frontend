@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { updateProfileData } from '../slices/authSlice';
 import { motion } from 'framer-motion';
 import Button from '../components/common/Button';
+import Avatar from '../components/common/Avatar';
 import VerifiedBadge from '../components/common/VerifiedBadge';
 import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
 import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
-import { getMyProfile, updateProfile, getMyContactInfo } from '../services/profileApi';
+import { getMyProfile, updateProfile, getMyContactInfo, updateProfilePhoto } from '../services/profileApi';
 import { containerVariants, itemVariants } from '../utils/animations';
 import { formatSmoking, formatPets, formatSleep, formatCleanlinessLevel, formatGender } from '../utils/enumLabels';
 import Input from '../components/common/Input';
 
 const MyProfile = () => {
     const { user: authUser, token } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
     const [error, setError] = useState(null);
     const [contactInfo, setContactInfo] = useState({ email: '', phone: '', isHidden: false });
-    
+    const fileInputRef = React.useRef(null);
+    const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
     // Editable state
     const [editForm, setEditForm] = useState({
         name: '',
         age: '',
         bio: '',
         phone: '',
-        hideContactInfo: false
+        hideContactInfo: false,
+        profilePhotoUrl: ''
     });
 
     const fetchProfileData = async () => {
@@ -48,7 +55,8 @@ const MyProfile = () => {
                     age: profileRes.data.age || '',
                     bio: profileRes.data.bio || '',
                     phone: contactRes.success ? contactRes.data.phone : '',
-                    hideContactInfo: profileRes.data.hideContactInfo || false
+                    hideContactInfo: profileRes.data.hideContactInfo || false,
+                    profilePhotoUrl: profileRes.data.profilePhotoUrl || ''
                 });
             } else {
                 setError(profileRes.message || 'Failed to fetch profile');
@@ -133,9 +141,63 @@ const MyProfile = () => {
         },
     };
 
+    const handlePhotoUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (!supportedTypes.includes(file.type)) {
+            alert('Please upload a JPEG, PNG, or WebP image.');
+            return;
+        }
+
+        if (file.size > maxSize) {
+            alert('Image size must be 5MB or less.');
+            return;
+        }
+
+        // Show preview only
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setEditForm({ ...editForm, profilePhotoUrl: reader.result });
+        };
+        reader.readAsDataURL(file);
+
+        // Store the file for later upload when user clicks Save
+        setSelectedPhotoFile(file);
+    };
+
+    const handleCameraClick = () => {
+        fileInputRef.current?.click();
+    };
+
     const handleSave = async () => {
         try {
             setLoading(true);
+
+            // Upload photo first if a new one was selected
+            if (selectedPhotoFile) {
+                setUploadingPhoto(true);
+                const photoResponse = await updateProfilePhoto(selectedPhotoFile, token);
+                if (!photoResponse.success) {
+                    alert(photoResponse.message || 'Failed to upload photo');
+                    setLoading(false);
+                    setUploadingPhoto(false);
+                    return;
+                }
+                // Update Redux store with new photo URL
+                if (photoResponse.data?.profilePhotoUrl) {
+                    dispatch(updateProfileData({
+                        profilePhotoUrl: photoResponse.data.profilePhotoUrl
+                    }));
+                }
+                setUploadingPhoto(false);
+            }
+
+            // Then update profile data
             const updateData = {
                 name: editForm.name,
                 age: parseInt(editForm.age),
@@ -143,11 +205,19 @@ const MyProfile = () => {
                 phone: editForm.phone,
                 hideContactInfo: editForm.hideContactInfo
             };
-            
+
             const response = await updateProfile(updateData, token);
             if (response.success) {
+                // Update Redux store with new profile data
+                dispatch(updateProfileData({
+                    name: editForm.name,
+                    age: parseInt(editForm.age),
+                    bio: editForm.bio
+                }));
+
                 await fetchProfileData();
                 setIsEditing(false);
+                setSelectedPhotoFile(null); // Clear selected photo
             } else {
                 alert(response.message || 'Update failed');
             }
@@ -155,6 +225,7 @@ const MyProfile = () => {
             alert(err.message || 'An error occurred during update');
         } finally {
             setLoading(false);
+            setUploadingPhoto(false);
         }
     };
 
@@ -172,7 +243,21 @@ const MyProfile = () => {
                         <h1 className="text-3xl font-bold mb-2">My Profile</h1>
                         <p className="text-gray-600">Manage your profile and preferences</p>
                     </div>
-                    <Button variant={isEditing ? 'outline' : 'primary'} onClick={() => setIsEditing(!isEditing)}>
+                    <Button variant={isEditing ? 'outline' : 'primary'} onClick={() => {
+                        if (isEditing) {
+                            // Cancel: reset form and discard photo selection
+                            setEditForm({
+                                name: profile.name || authUser.name,
+                                age: profile.age || '',
+                                bio: profile.bio || '',
+                                phone: contactInfo.phone || '',
+                                hideContactInfo: profile.hideContactInfo || false,
+                                profilePhotoUrl: profile.profilePhotoUrl || ''
+                            });
+                            setSelectedPhotoFile(null);
+                        }
+                        setIsEditing(!isEditing);
+                    }}>
                         <Edit size={18}/>
                         {isEditing ? 'Cancel' : 'Edit Profile'}
                     </Button>
@@ -186,10 +271,31 @@ const MyProfile = () => {
                             {/* Avatar Section */}
                             <div className="profile-avatar-section">
                                 <div className="avatar-container">
-                                    <img src={profile.profilePhotoUrl || `https://i.pravatar.cc/150?u=${authUser.id}`} alt={profileData.name} className="profile-avatar-large"/>
-                                    {isEditing && (<button className="avatar-upload-btn">
-                                            <Camera size={20}/>
-                                        </button>)}
+                                    <Avatar
+                                        src={isEditing ? editForm.profilePhotoUrl : profile.profilePhotoUrl}
+                                        name={profileData.name}
+                                        size="2xl"
+                                        className="profile-avatar-large"
+                                    />
+                                    {isEditing && (
+                                        <>
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handlePhotoUpload}
+                                                style={{ display: 'none' }}
+                                            />
+                                            <button
+                                                className="avatar-upload-btn"
+                                                onClick={handleCameraClick}
+                                                type="button"
+                                                title="Select photo"
+                                            >
+                                                <Camera size={20}/>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="profile-header-info">
                                     {isEditing ? (
@@ -368,8 +474,8 @@ const MyProfile = () => {
                                     <Button variant="outline" onClick={() => setIsEditing(false)}>
                                         Cancel
                                     </Button>
-                                    <Button variant="primary" onClick={handleSave}>
-                                        Save Changes
+                                    <Button variant="primary" onClick={handleSave} disabled={loading}>
+                                        {loading ? (uploadingPhoto ? 'Uploading photo...' : 'Saving...') : 'Save Changes'}
                                     </Button>
                                 </div>)}
                         </div>

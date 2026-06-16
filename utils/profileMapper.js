@@ -171,23 +171,35 @@ export const computeMatchBreakdown = (myProfile, theirProfile) => {
   return factors.filter(f => f.max > 0);
 };
 
-export const profileToCard = (profile, myProfile = null) => ({
-  id: profile.userId,
-  name: profile.name,
-  age: profile.age,
-  gender: profile.gender,
-  budget: profile.budgetMin != null
-    ? `${profile.budgetMin.toLocaleString()}–${profile.budgetMax.toLocaleString()} EGP`
-    : 'N/A',
-  budgetMin: profile.budgetMin,
-  budgetMax: profile.budgetMax,
-  location: getProfileLocation(profile),
-  matchPercentage: computeMatch(myProfile, profile),
-  image: profile.profilePhotoUrl || `${DEFAULT_AVATAR}&name=${encodeURIComponent(profile.name || 'U')}`,
-  occupation: profile.occupation,
-  bio: profile.bio,
-  tags: buildTags(profile),
-  verified: Boolean(profile.isVerified),
-  isOnline: false,
-  _raw: profile,
-});
+export const profileToCard = (profile, myProfile = null) => {
+  // Prefer server-side match score if available
+  const matchPercentage = profile.matchScore != null
+    ? profile.matchScore
+    : computeMatch(myProfile, profile);
+
+  return {
+    id: profile.userId,
+    name: profile.name,
+    age: profile.age,
+    gender: profile.gender,
+    budget: profile.budgetMin != null
+      ? `${profile.budgetMin.toLocaleString()}–${profile.budgetMax.toLocaleString()} EGP`
+      : 'N/A',
+    budgetMin: profile.budgetMin,
+    budgetMax: profile.budgetMax,
+    location: getProfileLocation(profile),
+    matchPercentage,
+    matchBreakdown: profile.matchBreakdown || null,
+    strengths: profile.strengths || null,
+    conflicts: profile.conflicts || null,
+    explanation: profile.explanation || null,
+    discussionTopics: profile.discussionTopics || null,
+    image: profile.profilePhotoUrl || `${DEFAULT_AVATAR}&name=${encodeURIComponent(profile.name || 'U')}`,
+    occupation: profile.occupation,
+    bio: profile.bio,
+    tags: buildTags(profile),
+    verified: Boolean(profile.isVerified),
+    isOnline: false,
+    _raw: profile,
+  };
+};
