@@ -1,10 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
 const ProfileCompletionCard = ({ user }) => {
-    const navigate = useNavigate();
 
     const percentage = user?.profileCompletion ?? 0;
     const missingSteps = user?.missingSteps ?? [];
@@ -126,21 +123,6 @@ const ProfileCompletionCard = ({ user }) => {
                 ))}
             </div>
 
-            {missingSteps.length > 0 && (
-                <motion.div
-                    className="mt-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8, duration: 0.3 }}
-                >
-                    <button
-                        onClick={() => navigate('/profile-setup', { state: { edit: true } })}
-                        className="w-full py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors"
-                    >
-                        Complete profile
-                    </button>
-                </motion.div>
-            )}
         </motion.div>
     );
 };
