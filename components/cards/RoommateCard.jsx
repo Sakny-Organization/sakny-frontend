@@ -2,18 +2,23 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
+import Avatar from '../common/Avatar';
 import VerifiedBadge from '../common/VerifiedBadge';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSaveRoommate } from '../../slices/roommateSlice';
+import { saveProfileApi, unsaveProfileApi } from '../../slices/savedSlice';
 import { Bookmark, MapPin, Briefcase } from 'lucide-react';
 const RoommateCard = ({ roommate }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const savedIds = useSelector((state) => state.roommates.saved);
-    const isSaved = savedIds.includes(roommate.id);
+    const savedIds = useSelector((state) => state.saved.ids);
+    const isSaved = savedIds.includes(String(roommate.id));
     const handleSave = (e) => {
         e.stopPropagation();
-        dispatch(toggleSaveRoommate(roommate.id));
+        if (isSaved) {
+            dispatch(unsaveProfileApi(roommate.id));
+        } else {
+            dispatch(saveProfileApi(roommate.id));
+        }
     };
     const handleViewProfile = () => {
         navigate(`/match/${roommate.id}`);
@@ -27,9 +32,18 @@ const RoommateCard = ({ roommate }) => {
     };
     return (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.4, ease: [0.23, 1, 0.320, 1] }} whileHover={{ y: -8 }} className="group bg-white rounded-xl shadow-sm hover:shadow-hover border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex flex-col h-full" onClick={handleViewProfile}>
       {/* Image Container */}
-      <div className="relative h-64 w-full overflow-hidden">
-        <img src={roommate.image} alt={roommate.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+      <div className="relative h-64 w-full overflow-hidden bg-gray-100">
+        {roommate.image ? (
+          <>
+            <img src={roommate.image} alt={roommate.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <Avatar src={null} name={roommate.name} size="2xl" className="!h-32 !w-32 !text-4xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          </div>
+        )}
 
         {/* Match Badge */}
         <div className="absolute top-3 right-3">

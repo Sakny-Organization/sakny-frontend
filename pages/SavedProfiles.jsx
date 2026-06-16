@@ -1,26 +1,32 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
 import Button from '../components/common/Button';
-import { BookmarkIcon, Search } from 'lucide-react';
-import { containerVariants, itemVariants } from '../utils/animations';
+import { BookmarkIcon, Search, Loader } from 'lucide-react';
+import { fetchSavedProfiles } from '../slices/savedSlice';
+import { profileToCard } from '../utils/profileMapper';
 
 const SavedProfiles = () => {
-    const { list, saved } = useSelector((state) => state.roommates);
-    // Get saved roommates
-    const savedRoommates = list.filter(roommate => saved.includes(roommate.id));
-    
+    const dispatch = useDispatch();
+    const { profiles, loading } = useSelector((state) => state.saved);
+    const myProfile = useSelector((state) => state.auth.user);
+
+    useEffect(() => {
+        dispatch(fetchSavedProfiles());
+    }, [dispatch]);
+
+    const savedRoommates = profiles.map(p => profileToCard(p, myProfile));
+
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="app-container"
         >
             <div>
-                {/* Header */}
                 <div className="page-header">
                     <div>
                         <h1 className="text-3xl font-bold mb-2">Saved Profiles</h1>
@@ -36,10 +42,18 @@ const SavedProfiles = () => {
                     </Link>
                 </div>
 
-                {/* Content */}
-                {savedRoommates.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                        {savedRoommates.map((roommate) => (<RoommateCard key={roommate.id} roommate={roommate}/>))}
-                    </div>) : (<div className="empty-state">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16">
+                        <Loader size={24} className="animate-spin text-gray-400" />
+                    </div>
+                ) : savedRoommates.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                        {savedRoommates.map((roommate) => (
+                            <RoommateCard key={roommate.id} roommate={roommate}/>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="empty-state">
                         <div className="empty-state-icon">
                             <BookmarkIcon size={64}/>
                         </div>
@@ -54,7 +68,8 @@ const SavedProfiles = () => {
                                 Browse Roommates
                             </Button>
                         </Link>
-                    </div>)}
+                    </div>
+                )}
             </div>
         </motion.div>
     );
