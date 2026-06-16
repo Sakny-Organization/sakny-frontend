@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 const Footer = () => {
     return (
@@ -61,14 +62,14 @@ const Footer = () => {
               </a>
             </li>
             <li>
-              <a className="hover:text-primary transition-colors" href="/">
+              <Link className="hover:text-primary transition-colors" to="/privacy">
                 Privacy Policy
-              </a>
+              </Link>
             </li>
             <li>
-              <a className="hover:text-primary transition-colors" href="/">
+              <Link className="hover:text-primary transition-colors" to="/terms">
                 Terms of Service
-              </a>
+              </Link>
             </li>
           </ul>
         </motion.div>

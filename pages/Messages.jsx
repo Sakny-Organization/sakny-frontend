@@ -12,6 +12,7 @@ import {
     receiveMessage,
     setUnreadTotal,
 } from '../slices/messagesSlice';
+import { addRealtimeNotification } from '../slices/notificationSlice';
 import * as websocketService from '../services/websocketService';
 
 const Messages = () => {
@@ -43,7 +44,8 @@ const Messages = () => {
             websocketService.connect(
                 token,
                 (msg) => dispatch(receiveMessage(msg)),
-                (payload) => dispatch(setUnreadTotal(payload.totalUnread ?? payload))
+                (payload) => dispatch(setUnreadTotal(payload.totalUnread ?? payload)),
+                (notification) => dispatch(addRealtimeNotification(notification))
             );
         }
 
@@ -56,8 +58,9 @@ const Messages = () => {
     useEffect(() => {
         const startWith = location.state?.startWith;
         if (startWith) {
-            dispatch(setActiveConversation(startWith));
-            dispatch(fetchMessages({ userId: startWith }));
+            const userId = Number(startWith);
+            dispatch(setActiveConversation(userId));
+            dispatch(fetchMessages({ userId }));
         }
     }, [dispatch, location.state]);
 
@@ -82,20 +85,7 @@ const Messages = () => {
     const handleSendMessage = () => {
         if (!messageText.trim() || !activeUserId) return;
 
-        const sent = websocketService.send(activeUserId, messageText.trim());
-        if (!sent) {
-            dispatch(sendMessage({ receiverId: activeUserId, content: messageText.trim() }));
-        } else {
-            // Optimistically add the message to the list
-            dispatch(receiveMessage({
-                id: `temp-${Date.now()}`,
-                senderId: user?.userId || user?.id,
-                receiverId: activeUserId,
-                content: messageText.trim(),
-                sentAt: new Date().toISOString(),
-                isRead: false,
-            }));
-        }
+        dispatch(sendMessage({ receiverId: Number(activeUserId), content: messageText.trim() }));
         setMessageText('');
     };
 

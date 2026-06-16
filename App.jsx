@@ -3,7 +3,8 @@ import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-
 import { useSelector, useDispatch } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import apiService from './services/api';
-import { loginSuccess, loginFailure } from './slices/authSlice';
+import { loginSuccess, loginFailure, logout } from './slices/authSlice';
+import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import WelcomeMessage from './components/common/WelcomeMessage';
@@ -27,6 +28,8 @@ import EditProperty from './pages/landlord/EditProperty';
 
 import Properties from './pages/properties/Properties';
 import PropertyDetails from './pages/properties/PropertyDetails';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import { hydrateUserRole, isLandlordUser } from './utils/userRole';
 
 const ProtectedRoute = () => {
@@ -88,6 +91,14 @@ const App = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   React.useEffect(() => {
+    const handleSessionExpired = () => {
+      dispatch(logout());
+    };
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, [dispatch]);
+
+  React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && !isAuthenticated) {
       const fetchUser = async () => {
@@ -104,41 +115,45 @@ const App = () => {
     }
   }, [dispatch, isAuthenticated]);
 
-  return (<HashRouter>
-    <Routes>
-      <Route element={<Layout />}>
+  return (<ErrorBoundary>
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout />}>
 
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardEntry />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardEntry />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
 
-          <Route element={<CompletedProfileRoute />}>
-            <Route path="/search" element={<Search />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:id" element={<PropertyDetails />} />
-            <Route path="/match/:id" element={<MatchProfile />} />
-            <Route path="/profile" element={<MyProfile />} />
-            <Route path="/saved" element={<SavedProfiles />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/verify-contact" element={<VerifyContact />} />
-            <Route path="/verify-id" element={<VerifyId />} />
-          </Route>
+            <Route element={<CompletedProfileRoute />}>
+              <Route path="/search" element={<Search />} />
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/properties/:id" element={<PropertyDetails />} />
+              <Route path="/match/:id" element={<MatchProfile />} />
+              <Route path="/profile" element={<MyProfile />} />
+              <Route path="/saved" element={<SavedProfiles />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/verify-contact" element={<VerifyContact />} />
+              <Route path="/verify-id" element={<VerifyId />} />
+            </Route>
 
-          <Route element={<LandlordRoute />}>
-            <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
+            <Route element={<LandlordRoute />}>
+              <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
 
-            <Route path="/landlord/properties/new" element={<AddProperty />} />
-            <Route path="/landlord/properties/:id/edit" element={<EditProperty />} />
+              <Route path="/landlord/properties/new" element={<AddProperty />} />
+              <Route path="/landlord/properties/:id/edit" element={<EditProperty />} />
+            </Route>
           </Route>
         </Route>
-      </Route>
-    </Routes>
-  </HashRouter>);
+      </Routes>
+    </HashRouter>
+  </ErrorBoundary>);
 };
 export default App;

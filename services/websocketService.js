@@ -7,17 +7,19 @@ const RECONNECT_DELAY = 5000;
 let client = null;
 let _onMessage = null;
 let _onUnreadCount = null;
+let _onNotification = null;
 let _token = null;
 let _connected = false;
 
 export const isConnected = () => _connected;
 
-export const connect = (token, onMessage, onUnreadCount) => {
+export const connect = (token, onMessage, onUnreadCount, onNotification) => {
   if (client && _connected) return;
 
   _token = token;
   _onMessage = onMessage;
   _onUnreadCount = onUnreadCount;
+  _onNotification = onNotification;
 
   client = new Client({
     webSocketFactory: () => new SockJS(WS_URL.replace(/^ws/, 'http')),
@@ -43,6 +45,15 @@ export const connect = (token, onMessage, onUnreadCount) => {
         try {
           const payload = JSON.parse(frame.body);
           if (_onUnreadCount) _onUnreadCount(payload);
+        } catch {
+          // ignore malformed frames
+        }
+      });
+
+      client.subscribe('/user/queue/notifications', (frame) => {
+        try {
+          const notification = JSON.parse(frame.body);
+          if (_onNotification) _onNotification(notification);
         } catch {
           // ignore malformed frames
         }

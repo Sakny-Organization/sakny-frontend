@@ -34,6 +34,7 @@ const storedSession = loadStoredSession();
 const initialState = {
   user: storedSession?.user || null,
   token: storedSession?.token || null,
+  refreshToken: storedSession?.refreshToken || null,
   isAuthenticated: Boolean(storedSession?.token),
   loading: false,
   error: null,
@@ -67,6 +68,7 @@ export const loginUser = createAsyncThunk(
 
       const session = {
         token: response.token,
+        refreshToken: response.refreshToken,
         user,
         profileCompleted,
       };
@@ -95,6 +97,7 @@ export const registerUser = createAsyncThunk(
 
       const session = {
         token: response.token,
+        refreshToken: response.refreshToken,
         user,
         profileCompleted: false,
       };
@@ -114,6 +117,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
@@ -129,6 +133,7 @@ const authSlice = createSlice({
       if (state.token && state.user) {
         persistSession({
           token: state.token,
+          refreshToken: state.refreshToken,
           user: state.user,
           profileCompleted: true,
         });
@@ -141,6 +146,7 @@ const authSlice = createSlice({
       if (state.token && state.user) {
         persistSession({
           token: state.token,
+          refreshToken: state.refreshToken,
           user: state.user,
           profileCompleted: state.profileCompleted,
         });
@@ -175,6 +181,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
         state.user = action.payload.user;
         state.profileCompleted = action.payload.profileCompleted;
         state.isAuthenticated = true;
@@ -192,6 +199,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
         state.user = action.payload.user;
         state.profileCompleted = action.payload.profileCompleted;
         state.isAuthenticated = true;
@@ -215,6 +223,7 @@ const authSlice = createSlice({
           state.profileCompleted = true;
           persistSession({
             token: state.token,
+            refreshToken: state.refreshToken,
             user: state.user,
             profileCompleted: true,
           });

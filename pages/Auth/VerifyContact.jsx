@@ -52,20 +52,20 @@ const VerifyContact = () => {
         return () => clearTimeout(timer);
     }, [cooldown]);
 
-    // Auto-send OTP when arriving from profile page with a pre-selected channel
+    // Set the preselected channel but don't auto-send
     useEffect(() => {
-        if (preselectedChannel && step === 'pick') {
-            handleSelectChannel(preselectedChannel);
+        if (preselectedChannel) {
+            setChannel(preselectedChannel);
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const handleSelectChannel = async (ch) => {
-        setChannel(ch);
+    const handleSendOtp = async () => {
+        if (!channel) return;
         setError('');
         setLoading(true);
         try {
-            const identifier = resolveIdentifier(ch);
-            await apiService.sendOtp({ identifier, channel: ch, purpose: 'REGISTRATION' });
+            const identifier = resolveIdentifier(channel);
+            await apiService.sendOtp({ identifier, channel, purpose: 'REGISTRATION' });
             setStep('otp');
             setCooldown(RESEND_COOLDOWN);
         } catch (err) {
@@ -73,6 +73,11 @@ const VerifyContact = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSelectChannel = (ch) => {
+        setChannel(ch);
+        setError('');
     };
 
     const handleResend = async () => {
@@ -150,62 +155,101 @@ const VerifyContact = () => {
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25 }}
                     >
-                        <p style={{ fontWeight: 600, marginBottom: '1rem', textAlign: 'center' }}>
-                            How would you like to verify?
-                        </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
-                            <button
-                                onClick={() => handleSelectChannel('EMAIL')}
-                                disabled={loading}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '1rem',
-                                    padding: '1rem 1.25rem', border: '2px solid #e5e7eb',
-                                    borderRadius: 12, background: 'white', cursor: 'pointer',
-                                    textAlign: 'left', transition: 'border-color 0.15s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
-                                onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
-                            >
-                                <div style={{ background: '#f3f4f6', borderRadius: 8, padding: 10 }}>
-                                    <Mail size={20} />
-                                </div>
-                                <div>
-                                    <div style={{ fontWeight: 600 }}>Email</div>
-                                    <div style={{ color: 'var(--color-gray-500)', fontSize: '0.875rem' }}>
-                                        {maskEmail(resolveIdentifier('EMAIL'))}
-                                    </div>
-                                </div>
-                            </button>
+                        {!preselectedChannel ? (
+                            <>
+                                <p style={{ fontWeight: 600, marginBottom: '1rem', textAlign: 'center' }}>
+                                    How would you like to verify?
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+                                    <button
+                                        onClick={() => handleSelectChannel('EMAIL')}
+                                        disabled={loading}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '1rem',
+                                            padding: '1rem 1.25rem',
+                                            border: channel === 'EMAIL' ? '2px solid #111' : '2px solid #e5e7eb',
+                                            borderRadius: 12, background: 'white', cursor: 'pointer',
+                                            textAlign: 'left', transition: 'border-color 0.15s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = channel === 'EMAIL' ? '#111' : '#e5e7eb'}
+                                    >
+                                        <div style={{ background: '#f3f4f6', borderRadius: 8, padding: 10 }}>
+                                            <Mail size={20} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 600 }}>Email</div>
+                                            <div style={{ color: 'var(--color-gray-500)', fontSize: '0.875rem' }}>
+                                                {maskEmail(resolveIdentifier('EMAIL'))}
+                                            </div>
+                                        </div>
+                                    </button>
 
-                            <button
-                                onClick={() => handleSelectChannel('PHONE')}
-                                disabled={loading}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '1rem',
-                                    padding: '1rem 1.25rem', border: '2px solid #e5e7eb',
-                                    borderRadius: 12, background: 'white', cursor: 'pointer',
-                                    textAlign: 'left', transition: 'border-color 0.15s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
-                                onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e7eb'}
-                            >
-                                <div style={{ background: '#f3f4f6', borderRadius: 8, padding: 10 }}>
-                                    <Phone size={20} />
+                                    <button
+                                        onClick={() => handleSelectChannel('PHONE')}
+                                        disabled={loading}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '1rem',
+                                            padding: '1rem 1.25rem',
+                                            border: channel === 'PHONE' ? '2px solid #111' : '2px solid #e5e7eb',
+                                            borderRadius: 12, background: 'white', cursor: 'pointer',
+                                            textAlign: 'left', transition: 'border-color 0.15s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = channel === 'PHONE' ? '#111' : '#e5e7eb'}
+                                    >
+                                        <div style={{ background: '#f3f4f6', borderRadius: 8, padding: 10 }}>
+                                            <Phone size={20} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 600 }}>Phone</div>
+                                            <div style={{ color: 'var(--color-gray-500)', fontSize: '0.875rem' }}>
+                                                {maskPhone(resolveIdentifier('PHONE'))}
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
-                                <div>
-                                    <div style={{ fontWeight: 600 }}>Phone</div>
-                                    <div style={{ color: 'var(--color-gray-500)', fontSize: '0.875rem' }}>
-                                        {maskPhone(resolveIdentifier('PHONE'))}
+                            </>
+                        ) : (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <p style={{ textAlign: 'center', color: 'var(--color-gray-500)', marginBottom: '1.5rem', fontSize: '0.9375rem' }}>
+                                    We'll send a code to verify your {channel === 'EMAIL' ? 'email' : 'phone number'}:
+                                </p>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '1rem',
+                                    padding: '1rem 1.25rem', border: '2px solid #111',
+                                    borderRadius: 12, background: '#f9fafb', marginBottom: '1.5rem'
+                                }}>
+                                    <div style={{ background: '#fff', borderRadius: 8, padding: 10 }}>
+                                        {channel === 'EMAIL' ? <Mail size={20} /> : <Phone size={20} />}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600 }}>{channel === 'EMAIL' ? 'Email' : 'Phone'}</div>
+                                        <div style={{ color: 'var(--color-gray-500)', fontSize: '0.875rem' }}>
+                                            {channel === 'EMAIL'
+                                                ? maskEmail(resolveIdentifier('EMAIL'))
+                                                : maskPhone(resolveIdentifier('PHONE'))}
+                                        </div>
                                     </div>
                                 </div>
-                            </button>
-                        </div>
+                            </div>
+                        )}
 
                         {error && (
                             <p style={{ color: '#dc2626', textAlign: 'center', marginBottom: '1rem', fontSize: '0.875rem' }}>
                                 {error}
                             </p>
                         )}
+
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={handleSendOtp}
+                            disabled={loading || !channel}
+                            style={{ marginBottom: '1rem' }}
+                        >
+                            {loading ? 'Sending...' : `Send verification code`}
+                        </Button>
 
                         <div style={{ textAlign: 'center' }}>
                             <button

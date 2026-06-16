@@ -53,3 +53,24 @@ export const updateProfile = async (profileData, token) => {
     headers: buildAuthHeaders(token),
   });
 };
+
+export const updateProfilePhoto = async (imageFile, token) => {
+  const formData = new FormData();
+  formData.append('profileImage', imageFile);
+
+  return apiRequest('/v1/profile/photo', {
+    method: 'PUT',
+    body: formData,
+    headers: {
+      ...buildAuthHeaders(token),
+      'Content-Type': undefined,
+    },
+  });
+};
+
+export const deleteProfilePhoto = async (token) => {
+  return apiRequest('/v1/profile/photo', {
+    method: 'DELETE',
+    headers: buildAuthHeaders(token),
+  });
+};

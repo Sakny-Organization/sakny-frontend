@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchMatches, updateFilters, resetFilters, setSortBy } from '../slices/matchSlice';
-import { motion } from 'framer-motion';
+import { fetchSavedProfiles } from '../slices/savedSlice';
+import { motion, AnimatePresence } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
 import Button from '../components/common/Button';
-import { Filter, X, List, Loader } from 'lucide-react';
+import { Filter, X, List, Loader, Sparkles } from 'lucide-react';
 import { containerVariants, itemVariants } from '../utils/animations';
 import { getSearchFilterOptions } from '../services/searchService';
+import { getMyProfile } from '../services/profileApi';
 
 const filterOptions = getSearchFilterOptions();
 
@@ -18,7 +20,55 @@ const TYPE_LABELS = { STUDENT: 'Student', WORKING_PROFESSIONAL: 'Professional', 
 const Search = () => {
     const dispatch = useDispatch();
     const { items, filters, sortBy, status, empty } = useSelector((state) => state.matches);
+    const { token } = useSelector((state) => state.auth);
     const [localBudgetMax, setLocalBudgetMax] = useState(filters.budgetRange?.max || 9000);
+    const [useMyPreferences, setUseMyPreferences] = useState(true);
+    const [myPreferences, setMyPreferences] = useState(null);
+    const [loadingPreferences, setLoadingPreferences] = useState(true);
+
+    useEffect(() => {
+        dispatch(fetchSavedProfiles());
+    }, [dispatch]);
+
+    // Load user preferences on mount
+    useEffect(() => {
+        const loadUserPreferences = async () => {
+            try {
+                const response = await getMyProfile(token);
+                if (response.success && response.data) {
+                    const profile = response.data;
+                    const smokingMap = { NON_SMOKER_ONLY: 'NON_SMOKER', DONT_MIND: 'Any' };
+                    const petsMap = { NO_PETS_PREFERRED: 'NO_PETS', OKAY_WITH_PETS: 'Any' };
+                    const sleepMap = { EARLY_BIRD: 'EARLY_BIRD', NIGHT_OWL: 'NIGHT_OWL', DONT_MIND: 'Any' };
+                    setMyPreferences({
+                        gender: profile.roommateGender || 'All',
+                        budgetRange: {
+                            min: profile.budgetMin || 500,
+                            max: profile.budgetMax || 9000
+                        },
+                        smoking: smokingMap[profile.prefSmoking] || 'Any',
+                        pets: petsMap[profile.prefPets] || 'Any',
+                        sleepSchedule: sleepMap[profile.prefSleepSchedule] || 'Any',
+                        roommateType: profile.roommateType || 'Any'
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load preferences:', err);
+            } finally {
+                setLoadingPreferences(false);
+            }
+        };
+
+        loadUserPreferences();
+    }, [token]);
+
+    // Apply preferences when loaded or when toggle changes
+    useEffect(() => {
+        if (!loadingPreferences && myPreferences && useMyPreferences) {
+            dispatch(updateFilters(myPreferences));
+            setLocalBudgetMax(myPreferences.budgetRange.max);
+        }
+    }, [myPreferences, useMyPreferences, loadingPreferences, dispatch]);
 
     useEffect(() => {
         dispatch(fetchMatches(filters));
@@ -64,21 +114,62 @@ const Search = () => {
                                 <Filter size={18}/> Filters
                             </h3>
                             <button
-                                onClick={() => dispatch(resetFilters())}
+                                onClick={() => {
+                                    setUseMyPreferences(true);
+                                    if (myPreferences) {
+                                        dispatch(updateFilters(myPreferences));
+                                        setLocalBudgetMax(myPreferences.budgetRange.max);
+                                    }
+                                }}
                                 className="text-xs text-gray-600 font-medium hover:text-black transition-colors"
                             >
-                                Reset all
+                                Reset
                             </button>
                         </div>
+
+                        {/* Toggle: My Preferences vs Custom */}
+                        {!loadingPreferences && myPreferences && (
+                            <div className="mb-6">
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                    <div className="flex items-center cursor-pointer" onClick={() => {
+                                        const newValue = !useMyPreferences;
+                                        setUseMyPreferences(newValue);
+                                        if (newValue && myPreferences) {
+                                            dispatch(updateFilters(myPreferences));
+                                            setLocalBudgetMax(myPreferences.budgetRange.max);
+                                        }
+                                    }}>
+                                        <div className={`relative w-11 h-6 rounded-full transition-colors ${useMyPreferences ? 'bg-black' : 'bg-gray-300'}`}>
+                                            <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform ${useMyPreferences ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                        </div>
+                                        <div className="ml-3 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <Sparkles size={14} className={useMyPreferences ? 'text-black' : 'text-gray-400'} />
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    Use my preferences
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                {useMyPreferences ? 'Showing matches based on your profile' : 'Using custom filters'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-6">
                             {/* Gender */}
                             <div>
                                 <label className="block text-sm font-medium text-black mb-2">Gender</label>
                                 <select
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3"
+                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                                     value={filters.gender}
-                                    onChange={(e) => dispatch(updateFilters({ gender: e.target.value }))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        dispatch(updateFilters({ gender: e.target.value }));
+                                    }}
+                                    disabled={loadingPreferences || useMyPreferences}
                                 >
                                     <option value="All">Any</option>
                                     <option value="MALE">Male only</option>
@@ -98,10 +189,14 @@ const Search = () => {
                                     max="20000"
                                     step="500"
                                     value={localBudgetMax}
-                                    onChange={(e) => setLocalBudgetMax(Number(e.target.value))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        setLocalBudgetMax(Number(e.target.value));
+                                    }}
                                     onMouseUp={handleBudgetCommit}
                                     onTouchEnd={handleBudgetCommit}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+                                    disabled={loadingPreferences || useMyPreferences}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <div className="flex justify-between mt-1 text-xs text-gray-400">
                                     <span>500</span>
@@ -113,9 +208,13 @@ const Search = () => {
                             <div>
                                 <label className="block text-sm font-medium text-black mb-2">Smoking</label>
                                 <select
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3"
+                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                                     value={filters.smoking}
-                                    onChange={(e) => dispatch(updateFilters({ smoking: e.target.value }))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        dispatch(updateFilters({ smoking: e.target.value }));
+                                    }}
+                                    disabled={loadingPreferences || useMyPreferences}
                                 >
                                     {filterOptions.smoking.map(v => (
                                         <option key={v} value={v}>{v === 'Any' ? 'Any' : SMOKING_LABELS[v] || v}</option>
@@ -127,9 +226,13 @@ const Search = () => {
                             <div>
                                 <label className="block text-sm font-medium text-black mb-2">Pets</label>
                                 <select
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3"
+                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                                     value={filters.pets}
-                                    onChange={(e) => dispatch(updateFilters({ pets: e.target.value }))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        dispatch(updateFilters({ pets: e.target.value }));
+                                    }}
+                                    disabled={loadingPreferences || useMyPreferences}
                                 >
                                     {filterOptions.pets.map(v => (
                                         <option key={v} value={v}>{v === 'Any' ? 'Any' : PETS_LABELS[v] || v}</option>
@@ -141,9 +244,13 @@ const Search = () => {
                             <div>
                                 <label className="block text-sm font-medium text-black mb-2">Sleep Schedule</label>
                                 <select
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3"
+                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                                     value={filters.sleepSchedule}
-                                    onChange={(e) => dispatch(updateFilters({ sleepSchedule: e.target.value }))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        dispatch(updateFilters({ sleepSchedule: e.target.value }));
+                                    }}
+                                    disabled={loadingPreferences || useMyPreferences}
                                 >
                                     {filterOptions.sleepSchedule.map(v => (
                                         <option key={v} value={v}>{v === 'Any' ? 'Any' : SLEEP_LABELS[v] || v}</option>
@@ -155,9 +262,13 @@ const Search = () => {
                             <div>
                                 <label className="block text-sm font-medium text-black mb-2">Roommate Type</label>
                                 <select
-                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3"
+                                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 border px-3 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                                     value={filters.roommateType}
-                                    onChange={(e) => dispatch(updateFilters({ roommateType: e.target.value }))}
+                                    onChange={(e) => {
+                                        setUseMyPreferences(false);
+                                        dispatch(updateFilters({ roommateType: e.target.value }));
+                                    }}
+                                    disabled={loadingPreferences || useMyPreferences}
                                 >
                                     {filterOptions.roommateType.map(v => (
                                         <option key={v} value={v}>{v === 'Any' ? 'Any' : TYPE_LABELS[v] || v}</option>
