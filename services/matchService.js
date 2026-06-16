@@ -1,6 +1,13 @@
 import { apiRequest, buildAuthHeaders } from './apiClient';
 
-const token = () => localStorage.getItem('token');
+const token = () => {
+  try {
+    const session = JSON.parse(localStorage.getItem('sakny_auth_session'));
+    return session?.token || null;
+  } catch {
+    return null;
+  }
+};
 
 export const getAllMatches = async (filters = {}) => {
   const params = new URLSearchParams();
@@ -13,13 +20,21 @@ export const getAllMatches = async (filters = {}) => {
   if (filters.roommateType && filters.roommateType !== 'Any') params.set('roommateType', filters.roommateType);
 
   const qs = params.toString();
-  const res = await apiRequest(`/v1/profile/roommates${qs ? '?' + qs : ''}`, {
+  const res = await apiRequest(`/v1/profile/roommates/scored${qs ? '?' + qs : ''}`, {
     method: 'GET',
     headers: buildAuthHeaders(token()),
   });
-  // Response is ApiResponse<Page<ProfileResponse>> — extract content array
+
   const page = res?.data ?? res;
-  return Array.isArray(page) ? page : (page?.content ?? []);
+  const content = Array.isArray(page) ? page : (page?.content ?? []);
+
+  // Each item is { score, breakdown, strengths, conflicts, profile }
+  return content.map(item => {
+    if (item.profile) {
+      return { ...item.profile, matchScore: item.score, matchBreakdown: item.breakdown, strengths: item.strengths, conflicts: item.conflicts };
+    }
+    return item;
+  });
 };
 
 export const getRecommendedMatches = async (limit = 4) => {
@@ -33,7 +48,26 @@ export const getMatchById = async (id) => {
     method: 'GET',
     headers: buildAuthHeaders(token()),
   });
-  return res?.data ?? res ?? null;
+  const profile = res?.data ?? res ?? null;
+
+  // Also fetch compatibility score
+  try {
+    const scoreRes = await apiRequest(`/v1/profile/${id}/compatibility`, {
+      method: 'GET',
+      headers: buildAuthHeaders(token()),
+    });
+    const scoreData = scoreRes?.data ?? scoreRes;
+    if (scoreData && profile) {
+      profile.matchScore = scoreData.score;
+      profile.matchBreakdown = scoreData.breakdown;
+      profile.strengths = scoreData.strengths;
+      profile.conflicts = scoreData.conflicts;
+    }
+  } catch {
+    // Compatibility endpoint might fail, that's ok
+  }
+
+  return profile;
 };
 
 export const getMatchFactors = () => [

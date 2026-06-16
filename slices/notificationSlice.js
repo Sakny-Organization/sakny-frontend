@@ -1,123 +1,120 @@
-import { createSlice } from '@reduxjs/toolkit';
-const initialState = {
-    notifications: [
-        {
-            id: '1',
-            type: 'message',
-            title: 'New message from Mohamed Ramadan',
-            message: 'Great! When can we meet to discuss?',
-            timestamp: '30 minutes ago',
-            read: false,
-            icon: '💬',
-        },
-        {
-            id: '2',
-            type: 'match',
-            title: 'New match found!',
-            message: 'Ahmed Tarek (92% match) matches your preferences',
-            timestamp: '2 hours ago',
-            read: false,
-            icon: '❤️',
-        },
-        {
-            id: '3',
-            type: 'view',
-            title: 'Profile view',
-            message: 'Sara Ahmed viewed your profile',
-            timestamp: '5 hours ago',
-            read: true,
-            icon: '👁️',
-        },
-        {
-            id: '4',
-            type: 'saved',
-            title: 'Someone saved your profile',
-            message: 'Your profile was saved by a potential roommate',
-            timestamp: '1 day ago',
-            read: true,
-            icon: '💾',
-        },
-        {
-            id: '5',
-            type: 'verification',
-            title: 'Verification reminder',
-            message: 'Complete your profile verification to get more matches',
-            timestamp: '2 days ago',
-            read: true,
-            icon: '✅',
-        },
-    ],
-    messages: [
-        {
-            id: '1',
-            senderId: 'user1',
-            senderName: 'Mohamed Ramadan',
-            senderAvatar: 'https://i.pravatar.cc/150?u=user1',
-            content: 'Great! When can we meet to discuss?',
-            timestamp: '30 minutes ago',
-            read: false,
-        },
-        {
-            id: '2',
-            senderId: 'user2',
-            senderName: 'Sara Ahmed',
-            senderAvatar: 'https://i.pravatar.cc/150?u=user2',
-            content: 'Hi! I saw your profile and I think we would be a great match!',
-            timestamp: '2 hours ago',
-            read: false,
-        },
-        {
-            id: '3',
-            senderId: 'user3',
-            senderName: 'Ahmed Ali',
-            senderAvatar: 'https://i.pravatar.cc/150?u=user3',
-            content: 'Are you still looking for a roommate?',
-            timestamp: '5 hours ago',
-            read: false,
-        },
-    ],
-    unreadNotifications: 2,
-    unreadMessages: 3,
-};
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {
+  fetchNotifications as apiFetchNotifications,
+  fetchUnreadCount as apiFetchUnreadCount,
+  markNotificationRead as apiMarkRead,
+  markAllNotificationsRead as apiMarkAllRead,
+} from '../services/notificationApi';
+
+export const fetchNotifications = createAsyncThunk(
+  'notifications/fetchNotifications',
+  async ({ page = 0, size = 20 } = {}, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const res = await apiFetchNotifications(page, size, token);
+      return res?.data;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to load notifications');
+    }
+  }
+);
+
+export const fetchUnreadCount = createAsyncThunk(
+  'notifications/fetchUnreadCount',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const res = await apiFetchUnreadCount(token);
+      return res?.data?.count ?? 0;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to load unread count');
+    }
+  }
+);
+
+export const markNotificationAsRead = createAsyncThunk(
+  'notifications/markAsRead',
+  async (id, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      await apiMarkRead(id, token);
+      return id;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to mark as read');
+    }
+  }
+);
+
+export const markAllNotificationsAsRead = createAsyncThunk(
+  'notifications/markAllAsRead',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      await apiMarkAllRead(token);
+      return true;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to mark all as read');
+    }
+  }
+);
+
 const notificationSlice = createSlice({
-    name: 'notification',
-    initialState,
-    reducers: {
-        markNotificationAsRead: (state, action) => {
-            const notification = state.notifications.find(n => n.id === action.payload);
-            if (notification && !notification.read) {
-                notification.read = true;
-                state.unreadNotifications = Math.max(0, state.unreadNotifications - 1);
-            }
-        },
-        markAllNotificationsAsRead: (state) => {
-            state.notifications.forEach(n => n.read = true);
-            state.unreadNotifications = 0;
-        },
-        markMessageAsRead: (state, action) => {
-            const message = state.messages.find(m => m.id === action.payload);
-            if (message && !message.read) {
-                message.read = true;
-                state.unreadMessages = Math.max(0, state.unreadMessages - 1);
-            }
-        },
-        markAllMessagesAsRead: (state) => {
-            state.messages.forEach(m => m.read = true);
-            state.unreadMessages = 0;
-        },
-        addNotification: (state, action) => {
-            state.notifications.unshift(action.payload);
-            if (!action.payload.read) {
-                state.unreadNotifications += 1;
-            }
-        },
-        addMessage: (state, action) => {
-            state.messages.unshift(action.payload);
-            if (!action.payload.read) {
-                state.unreadMessages += 1;
-            }
-        },
+  name: 'notifications',
+  initialState: {
+    notifications: [],
+    unreadCount: 0,
+    loading: false,
+    page: 0,
+    totalPages: 0,
+    hasMore: false,
+    error: null,
+  },
+  reducers: {
+    addRealtimeNotification: (state, action) => {
+      state.notifications.unshift(action.payload);
+      state.unreadCount += 1;
     },
+    setUnreadCount: (state, action) => {
+      state.unreadCount = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchNotifications.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchNotifications.fulfilled, (state, action) => {
+        state.loading = false;
+        const page = action.payload;
+        if (page) {
+          state.notifications = page.content || [];
+          state.page = page.number ?? 0;
+          state.totalPages = page.totalPages ?? 0;
+          state.hasMore = (page.number ?? 0) < (page.totalPages ?? 0) - 1;
+        }
+      })
+      .addCase(fetchNotifications.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchUnreadCount.fulfilled, (state, action) => {
+        state.unreadCount = action.payload;
+      })
+      .addCase(markNotificationAsRead.fulfilled, (state, action) => {
+        const id = action.payload;
+        const notif = state.notifications.find((n) => n.id === id);
+        if (notif && !notif.isRead) {
+          notif.isRead = true;
+          state.unreadCount = Math.max(0, state.unreadCount - 1);
+        }
+      })
+      .addCase(markAllNotificationsAsRead.fulfilled, (state) => {
+        state.notifications.forEach((n) => { n.isRead = true; });
+        state.unreadCount = 0;
+      });
+  },
 });
-export const { markNotificationAsRead, markAllNotificationsAsRead, markMessageAsRead, markAllMessagesAsRead, addNotification, addMessage, } = notificationSlice.actions;
+
+export const { addRealtimeNotification, setUnreadCount } = notificationSlice.actions;
 export default notificationSlice.reducer;
