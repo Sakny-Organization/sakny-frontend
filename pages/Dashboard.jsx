@@ -2,7 +2,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
-import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition';
 import { Link } from 'react-router-dom';
@@ -30,14 +29,9 @@ const Dashboard = () => {
           </p>
         </motion.div>
 
-        {/* Top Section: Profile & Sidebar */}
+        {/* Top Section */}
         <motion.div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12" variants={containerVariants} initial="initial" animate="animate">
-          {/* Left Column: Profile completion */}
-          <motion.div className="lg:col-span-2" variants={itemVariants}>
-            <ProfileCompletionCard user={user}/>
-          </motion.div>
-
-          {/* Right Column: Quick actions & Tips */}
+          {/* Quick actions & Tips */}
           <motion.div className="space-y-6" variants={itemVariants}>
             {/* Find Roommate Card */}
             <motion.div className="bg-white rounded-lg p-6 shadow-lg" whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>

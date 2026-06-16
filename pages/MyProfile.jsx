@@ -8,6 +8,7 @@ import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
 import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
 import { getMyProfile, updateProfile, getMyContactInfo } from '../services/profileApi';
 import { containerVariants, itemVariants } from '../utils/animations';
+import { formatSmoking, formatPets, formatSleep, formatCleanlinessLevel, formatGender } from '../utils/enumLabels';
 import Input from '../components/common/Input';
 
 const MyProfile = () => {
@@ -103,21 +104,21 @@ const MyProfile = () => {
         bio: profile.bio || 'No bio provided yet.',
         personality: profile.personalityTraits || [],
         lifestyle: {
-            smoking: profile.smoking || 'Not specified',
-            pets: profile.pets || 'Not specified',
-            sleepSchedule: profile.sleepSchedule || 'Not specified',
-            cleanliness: profile.cleanliness ? `Level ${profile.cleanliness}` : 'Not specified',
+            smoking: formatSmoking(profile.smoking),
+            pets: formatPets(profile.pets),
+            sleepSchedule: formatSleep(profile.sleepSchedule),
+            cleanliness: profile.cleanliness ? formatCleanlinessLevel(profile.cleanliness) : 'Not specified',
         },
         preferences: {
             budget: profile.budgetMin && profile.budgetMax
                 ? `${profile.budgetMin.toLocaleString()} - ${profile.budgetMax.toLocaleString()} EGP`
                 : 'Not specified',
             locations: profile.preferredAreas?.map(area => area.city.nameEn) || [],
-            roommateGender: profile.roommateGender || 'Any',
+            roommateGender: formatGender(profile.roommateGender),
             additionalPrefs: [
-                profile.prefSmoking && `Smoking: ${profile.prefSmoking}`,
-                profile.prefPets && `Pets: ${profile.prefPets}`,
-                profile.prefSleepSchedule && `Sleep: ${profile.prefSleepSchedule}`,
+                profile.prefSmoking && `Smoking: ${formatSmoking(profile.prefSmoking)}`,
+                profile.prefPets && `Pets: ${formatPets(profile.prefPets)}`,
+                profile.prefSleepSchedule && `Sleep: ${formatSleep(profile.prefSleepSchedule)}`,
             ].filter(Boolean),
         },
         verified: {
