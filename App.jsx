@@ -25,9 +25,13 @@ import Notifications from './pages/Notifications';
 import LandlordDashboard from './pages/landlord/LandlordDashboard';
 import AddProperty from './pages/landlord/AddProperty';
 import EditProperty from './pages/landlord/EditProperty';
+import ExploreTenants from './pages/landlord/ExploreTenants';
+import TenantProfile from './pages/landlord/TenantProfile';
 
 import Properties from './pages/properties/Properties';
 import PropertyDetails from './pages/properties/PropertyDetails';
+import ExploreProperties from './pages/ExploreProperties';
+import MatchedPropertyDetail from './pages/MatchedPropertyDetail';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import { hydrateUserRole, isLandlordUser } from './utils/userRole';
@@ -133,6 +137,8 @@ const App = () => {
 
             <Route element={<CompletedProfileRoute />}>
               <Route path="/search" element={<Search />} />
+              <Route path="/explore-properties" element={<ExploreProperties />} />
+              <Route path="/explore-properties/:propertyId" element={<MatchedPropertyDetail />} />
               <Route path="/properties" element={<Properties />} />
               <Route path="/properties/:id" element={<PropertyDetails />} />
               <Route path="/match/:id" element={<MatchProfile />} />
@@ -146,7 +152,8 @@ const App = () => {
 
             <Route element={<LandlordRoute />}>
               <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
-
+              <Route path="/landlord/tenants" element={<ExploreTenants />} />
+              <Route path="/landlord/properties/:propertyId/tenants/:userId" element={<TenantProfile />} />
               <Route path="/landlord/properties/new" element={<AddProperty />} />
               <Route path="/landlord/properties/:id/edit" element={<EditProperty />} />
             </Route>

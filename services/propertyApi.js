@@ -58,6 +58,12 @@ export const deleteProperty = (id, token) =>
     headers: buildAuthHeaders(token),
   });
 
+export const togglePropertyStatus = (id, token) =>
+  apiRequest(`/v1/properties/${id}/status`, {
+    method: 'PATCH',
+    headers: buildAuthHeaders(token),
+  });
+
 export const fetchAmenities = () =>
   apiRequest('/v1/amenities', { method: 'GET' });
 

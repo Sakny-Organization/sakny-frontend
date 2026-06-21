@@ -7,7 +7,8 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import PropertyGrid from '../../components/property/PropertyGrid';
-import { fetchMyProperties, deleteProperty } from '../../slices/propertySlice';
+import { fetchMyProperties, deleteProperty, toggleStatus } from '../../slices/propertySlice';
+import { fetchLandlordRecommendations } from '../../slices/landlordMatchSlice';
 import { PROPERTY_STATUSES } from '../../services/propertyService';
 
 const AnimatedCounter = ({ value }) => {
@@ -37,17 +38,18 @@ const LandlordDashboard = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { myListings, myListingsLoading } = useSelector((state) => state.properties);
+  const { recommendations, recommendationsStatus } = useSelector((state) => state.landlordMatch);
   const [filters, setFilters] = React.useState({ query: '', status: 'all' });
 
   React.useEffect(() => {
     dispatch(fetchMyProperties());
+    dispatch(fetchLandlordRecommendations(4));
   }, [dispatch]);
 
-  // Derive stats from the real listings data
   const stats = React.useMemo(() => ({
     totalListings: myListings.length,
-    availableListings: myListings.filter((p) => p.status?.toLowerCase() === 'available').length,
-    rentedListings: myListings.filter((p) => p.status?.toLowerCase() === 'rented').length,
+    availableListings: myListings.filter((p) => !p.status || p.status.toUpperCase() === 'AVAILABLE').length,
+    rentedListings: myListings.filter((p) => p.status?.toUpperCase() === 'RENTED').length,
     totalViews: 0,
     newMessages: 0,
   }), [myListings]);
@@ -90,6 +92,41 @@ const LandlordDashboard = () => {
           </motion.div>
         ))}
       </section>
+
+      {recommendations.length > 0 && (
+        <section className="landlord-dashboard__section">
+          <div className="landlord-dashboard__section-head">
+            <div>
+              <h2>Top Tenant Matches</h2>
+              <p>Highest-compatibility tenants across your properties</p>
+            </div>
+            <Button variant="secondary" onClick={() => navigate('/landlord/tenants')}>View all</Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recommendations.map((match) => (
+              <motion.div
+                key={`${match.propertyId}-${match.id}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => navigate(`/landlord/properties/${match.propertyId}/tenants/${match.id}`)}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={match.image} alt={match.name} className="w-10 h-10 rounded-full object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-black truncate">{match.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{match.location}</p>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${match.matchPercentage >= 75 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {match.matchPercentage}%
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 truncate">{match.propertyTitle}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="landlord-dashboard__section">
         <div className="landlord-dashboard__section-head">
@@ -154,9 +191,8 @@ const LandlordDashboard = () => {
                   await dispatch(deleteProperty(property.id));
                 }}
                 onViewDetails={(property) => navigate(`/properties/${property.id}`)}
-                onToggleStatus={async () => {
-                  // Status toggle requires a backend PATCH endpoint — not yet implemented
-                  dispatch(fetchMyProperties());
+                onToggleStatus={async (property) => {
+                  await dispatch(toggleStatus(property.id));
                 }}
               />
             </motion.div>

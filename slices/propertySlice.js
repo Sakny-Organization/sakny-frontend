@@ -7,6 +7,7 @@ import {
   updateProperty as apiUpdateProperty,
   deleteProperty as apiDeleteProperty,
   fetchAmenities as apiFetchAmenities,
+  togglePropertyStatus as apiTogglePropertyStatus,
 } from '../services/propertyApi';
 
 export const fetchProperties = createAsyncThunk(
@@ -97,6 +98,19 @@ export const fetchAmenities = createAsyncThunk(
       return res?.data;
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to load amenities');
+    }
+  }
+);
+
+export const toggleStatus = createAsyncThunk(
+  'properties/toggleStatus',
+  async (id, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const res = await apiTogglePropertyStatus(id, token);
+      return res?.data;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to update status');
     }
   }
 );
@@ -231,6 +245,16 @@ const propertySlice = createSlice({
         const id = action.payload;
         state.myListings = state.myListings.filter((p) => p.id !== id);
         state.list = state.list.filter((p) => p.id !== id);
+      })
+
+      // Toggle status
+      .addCase(toggleStatus.fulfilled, (state, action) => {
+        const updated = action.payload;
+        if (updated) {
+          const idx = state.myListings.findIndex((p) => p.id === updated.id);
+          if (idx !== -1) state.myListings[idx] = updated;
+          if (state.activeProperty?.id === updated.id) state.activeProperty = updated;
+        }
       })
 
       // Amenities

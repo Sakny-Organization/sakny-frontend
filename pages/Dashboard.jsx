@@ -5,7 +5,7 @@ import RoommateCard from '../components/cards/RoommateCard';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition';
 import { Link } from 'react-router-dom';
-import { Search, BookmarkIcon, Loader } from 'lucide-react';
+import { Search, BookmarkIcon, Building2, Loader } from 'lucide-react';
 import { containerVariants, itemVariants } from '../utils/animations';
 import { fetchRecommendations } from '../slices/matchSlice';
 
@@ -46,6 +46,12 @@ const Dashboard = () => {
                                     <Button variant="primary" fullWidth className="flex items-center justify-center gap-2">
                                         <Search size={18} />
                                         Find roommate
+                                    </Button>
+                                </Link>
+                                <Link to="/explore-properties">
+                                    <Button variant="outline" fullWidth className="flex items-center justify-center gap-2">
+                                        <Building2 size={18} />
+                                        Explore properties
                                     </Button>
                                 </Link>
                                 <Link to="/saved">

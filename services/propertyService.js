@@ -81,6 +81,41 @@ export const PROPERTY_FINISHING_TYPES = [
   "ultra lux",
 ];
 
+export const PREF_GENDER_OPTIONS = [
+  { value: '', label: 'Any gender' },
+  { value: 'MALE', label: 'Male only' },
+  { value: 'FEMALE', label: 'Female only' },
+];
+
+export const PREF_TENANT_TYPE_OPTIONS = [
+  { value: '', label: "Don't mind" },
+  { value: 'STUDENT', label: 'Students' },
+  { value: 'WORKING_PROFESSIONAL', label: 'Working professionals' },
+];
+
+export const PREF_SMOKING_OPTIONS = [
+  { value: '', label: "Don't mind" },
+  { value: 'NON_SMOKER_ONLY', label: 'Non-smoker only' },
+];
+
+export const PREF_PETS_OPTIONS = [
+  { value: '', label: "Don't mind" },
+  { value: 'OKAY_WITH_PETS', label: 'Okay with pets' },
+  { value: 'NO_PETS_PREFERRED', label: 'No pets preferred' },
+];
+
+export const PREF_SLEEP_OPTIONS = [
+  { value: '', label: "Don't mind" },
+  { value: 'EARLY_BIRD', label: 'Early bird' },
+  { value: 'NIGHT_OWL', label: 'Night owl' },
+];
+
+export const PREF_CLEANLINESS_OPTIONS = [
+  { value: '', label: "Don't mind" },
+  { value: 'VERY_CLEAN', label: 'Very clean' },
+  { value: 'AVERAGE_OR_ABOVE', label: 'Average or above' },
+];
+
 const DEFAULT_DELAY = 260;
 
 const wait = (ms = DEFAULT_DELAY) =>

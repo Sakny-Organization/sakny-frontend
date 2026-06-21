@@ -2,33 +2,33 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ImagePlus, Star, Trash2, UploadCloud } from 'lucide-react';
 
-const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = reject;
-  reader.readAsDataURL(file);
-});
-
 const MAX_IMAGES = 15;
 
 const ImageUploader = ({ value = [], onChange }) => {
   const inputRef = React.useRef(null);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [previews, setPreviews] = React.useState([]);
 
-  const appendFiles = async (files) => {
+  React.useEffect(() => {
+    const urls = (value || []).map((file) =>
+      file instanceof File ? URL.createObjectURL(file) : file
+    );
+    setPreviews(urls);
+    return () => urls.forEach((url) => { if (url.startsWith('blob:')) URL.revokeObjectURL(url); });
+  }, [value]);
+
+  const appendFiles = (files) => {
     const remaining = MAX_IMAGES - (value?.length || 0);
     if (remaining <= 0) return;
-    const nextImages = await Promise.all(
-      Array.from(files).slice(0, remaining).map(readFileAsDataUrl)
-    );
-    onChange([...(value || []), ...nextImages]);
+    const newFiles = Array.from(files).slice(0, remaining);
+    onChange([...(value || []), ...newFiles]);
   };
 
-  const handleDrop = async (event) => {
+  const handleDrop = (event) => {
     event.preventDefault();
     setIsDragging(false);
     if (event.dataTransfer.files?.length) {
-      await appendFiles(event.dataTransfer.files);
+      appendFiles(event.dataTransfer.files);
     }
   };
 
@@ -80,32 +80,32 @@ const ImageUploader = ({ value = [], onChange }) => {
         type="file"
         accept="image/*"
         multiple
-        onChange={async (event) => {
+        onChange={(event) => {
           if (event.target.files?.length) {
-            await appendFiles(event.target.files);
+            appendFiles(event.target.files);
             event.target.value = '';
           }
         }}
       />
 
       <AnimatePresence>
-        {value?.length > 0 ? (
+        {previews.length > 0 ? (
           <motion.div
             className="property-uploader__grid"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {value.map((image, index) => (
+            {previews.map((preview, index) => (
               <motion.div
-                key={`${image.slice(-20)}-${index}`}
+                key={`${index}-${value[index]?.name || index}`}
                 className={`property-uploader__item ${index === 0 ? 'property-uploader__item--cover' : ''}`}
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.94 }}
                 transition={{ duration: 0.18 }}
               >
-                <img src={image} alt={`Property photo ${index + 1}`} />
+                <img src={preview} alt={`Property photo ${index + 1}`} />
                 {index === 0 && (
                   <div className="property-uploader__cover-badge">Cover</div>
                 )}

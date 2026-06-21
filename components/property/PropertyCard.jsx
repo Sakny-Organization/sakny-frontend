@@ -43,7 +43,8 @@ const PropertyCard = ({
   onToggleStatus,
   onContactOwner,
 }) => {
-  const coverImage = property.images?.[0] || 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80';
+  const firstImage = property.images?.[0];
+  const coverImage = (firstImage?.imageUrl || firstImage) || 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80';
   const availableDate = formatDate(property.availableFrom);
 
   return (
@@ -134,7 +135,7 @@ const PropertyCard = ({
                 leading={<CheckCircle2 size={13} />}
                 onClick={() => onToggleStatus?.(property)}
               >
-                {property.status === 'rented' ? 'Set Available' : 'Mark Rented'}
+                {property.status?.toLowerCase() === 'rented' ? 'Set Available' : 'Mark Rented'}
               </Button>
             </div>
           ) : (
