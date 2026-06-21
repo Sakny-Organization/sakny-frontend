@@ -50,9 +50,10 @@ export const loginUser = createAsyncThunk(
       let user = {
         email,
         name: email.split("@")[0] || "Sakny User",
+        ...(response.housingRole && { housingRole: response.housingRole }),
       };
 
-      let profileCompleted = false;
+      let profileCompleted = response.profileCompleted || false;
       try {
         const profile = await getMyProfile(response.token);
         if (profile && profile.data) {
@@ -63,7 +64,7 @@ export const loginUser = createAsyncThunk(
           profileCompleted = true;
         }
       } catch {
-        profileCompleted = false;
+        // Profile not created yet — keep profileCompleted from auth response
       }
 
       const session = {

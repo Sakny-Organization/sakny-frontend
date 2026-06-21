@@ -7,11 +7,12 @@ import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
 import VerifiedBadge from '../components/common/VerifiedBadge';
 import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
-import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle } from 'lucide-react';
+import { Edit, Camera, MapPin, Briefcase, Mail, Phone, CheckCircle, Building2 } from 'lucide-react';
 import { getMyProfile, updateProfile, getMyContactInfo, updateProfilePhoto } from '../services/profileApi';
 import { containerVariants, itemVariants } from '../utils/animations';
 import { formatSmoking, formatPets, formatSleep, formatCleanlinessLevel, formatGender } from '../utils/enumLabels';
 import Input from '../components/common/Input';
+import { isLandlordUser } from '../utils/userRole';
 
 const MyProfile = () => {
     const { user: authUser, token } = useSelector((state) => state.auth);
@@ -88,6 +89,88 @@ const MyProfile = () => {
     }
 
     if (error || !profile) {
+        if (isLandlordUser(authUser)) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="app-container"
+                >
+                    <div>
+                        <div className="profile-page-header">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+                                <p className="text-gray-600">Your landlord account details</p>
+                            </div>
+                        </div>
+                        <div className="profile-grid">
+                            <div className="profile-main-column">
+                                <div className="profile-card">
+                                    <div className="profile-avatar-section">
+                                        <div className="avatar-container">
+                                            <Avatar
+                                                src={authUser.profilePhotoUrl}
+                                                name={authUser.name || authUser.email}
+                                                size="2xl"
+                                                className="profile-avatar-large"
+                                            />
+                                        </div>
+                                        <div className="profile-header-info">
+                                            <h2 className="profile-name-large">{authUser.name || authUser.email?.split('@')[0]}</h2>
+                                            <div className="profile-meta">
+                                                <span className="meta-item">
+                                                    <Building2 size={16}/>
+                                                    Property Owner
+                                                </span>
+                                                {authUser.email && (
+                                                    <span className="meta-item">
+                                                        <Mail size={16}/>
+                                                        {authUser.email}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="profile-section">
+                                        <h3 className="section-title">Account Information</h3>
+                                        <div className="contact-info">
+                                            <div className="contact-item">
+                                                <Mail size={18} className="text-gray-400"/>
+                                                <span>{authUser.email || 'Not provided'}</span>
+                                            </div>
+                                            {authUser.phone && (
+                                                <div className="contact-item">
+                                                    <Phone size={18} className="text-gray-400"/>
+                                                    <span>{authUser.phone}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="profile-sidebar-column">
+                                <div className="actions-card">
+                                    <h3 className="card-title">Quick Actions</h3>
+                                    <div className="action-buttons">
+                                        <Button variant="outline" fullWidth onClick={() => navigate('/landlord/dashboard')}>
+                                            My Listings
+                                        </Button>
+                                        <Button variant="outline" fullWidth onClick={() => navigate('/landlord/properties/new')}>
+                                            Add New Property
+                                        </Button>
+                                        <Button variant="outline" fullWidth onClick={() => navigate('/messages')}>
+                                            Messages
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+        }
+
         return (
             <div className="app-container">
                 <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">

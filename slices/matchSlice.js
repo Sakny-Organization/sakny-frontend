@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import matchService from "../services/matchService";
-import searchService, { defaultSearchFilters } from "../services/searchService";
+import searchService from "../services/searchService";
 import { profileToCard } from "../utils/profileMapper";
 
 const toCards = (items, myProfile) =>
@@ -8,9 +8,9 @@ const toCards = (items, myProfile) =>
 
 export const fetchMatches = createAsyncThunk(
   "matches/fetchMatches",
-  async (filters, { getState }) => {
+  async (_, { getState }) => {
     const myProfile = getState().auth.user;
-    const result = await searchService.searchMatches(filters);
+    const result = await searchService.searchMatches();
     return { ...result, items: toCards(result.items, myProfile) };
   },
 );
@@ -37,37 +37,18 @@ const initialState = {
   items: [],
   recommendations: [],
   selectedMatch: null,
-  filters: defaultSearchFilters,
   sortBy: "match",
   status: "idle",
   recommendationsStatus: "idle",
   selectedStatus: "idle",
   empty: false,
   error: null,
-  meta: {
-    total: 0,
-    payload: {},
-    hasActiveFilters: false,
-  },
 };
 
 const matchSlice = createSlice({
   name: "matches",
   initialState,
   reducers: {
-    updateFilters: (state, action) => {
-      state.filters = {
-        ...state.filters,
-        ...action.payload,
-        budgetRange: {
-          ...state.filters.budgetRange,
-          ...(action.payload.budgetRange || {}),
-        },
-      };
-    },
-    resetFilters: (state) => {
-      state.filters = defaultSearchFilters;
-    },
     setSortBy: (state, action) => {
       state.sortBy = action.payload;
     },
@@ -85,7 +66,6 @@ const matchSlice = createSlice({
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.items = action.payload.items;
-        state.meta = action.payload.meta;
         state.empty = action.payload.items.length === 0;
       })
       .addCase(fetchMatches.rejected, (state, action) => {
@@ -117,6 +97,5 @@ const matchSlice = createSlice({
   },
 });
 
-export const { updateFilters, resetFilters, setSortBy, clearSelectedMatch } =
-  matchSlice.actions;
+export const { setSortBy, clearSelectedMatch } = matchSlice.actions;
 export default matchSlice.reducer;

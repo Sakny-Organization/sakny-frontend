@@ -1,10 +1,11 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Bath, BedDouble, Building2, FileText, Image as ImageIcon, MapPinned, Navigation, Phone, SlidersHorizontal, Tag, Wallet } from 'lucide-react';
+import { ArrowRight, Bath, BedDouble, Building2, FileText, Image as ImageIcon, MapPinned, Navigation, Phone, SlidersHorizontal, Tag, Users, Wallet } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import ImageUploader from './ImageUploader';
 import MapPicker from './MapPicker';
+import { apiRequest, buildAuthHeaders } from '../../services/apiClient';
 import {
   PROPERTY_AMENITIES,
   PROPERTY_BUILDING_AGES,
@@ -14,6 +15,12 @@ import {
   PROPERTY_TENANT_TYPES,
   PROPERTY_TYPES,
   PROPERTY_VIEW_TYPES,
+  PREF_GENDER_OPTIONS,
+  PREF_TENANT_TYPE_OPTIONS,
+  PREF_SMOKING_OPTIONS,
+  PREF_PETS_OPTIONS,
+  PREF_SLEEP_OPTIONS,
+  PREF_CLEANLINESS_OPTIONS,
 } from '../../services/propertyService';
 
 const defaultProperty = {
@@ -22,8 +29,8 @@ const defaultProperty = {
   type: 'apartment',
   price: '',
   currency: 'EGP',
-  city: '',
-  district: '',
+  governorateId: '',
+  cityId: '',
   address: '',
   nearbyLandmarks: '',
   nearbyTransport: '',
@@ -53,6 +60,14 @@ const defaultProperty = {
   location: null,
   contactPhone: '',
   notes: '',
+  prefTenantGender: '',
+  prefTenantType: '',
+  prefSmoking: '',
+  prefPets: '',
+  prefSleepSchedule: '',
+  prefCleanliness: '',
+  prefMinAge: '',
+  prefMaxAge: '',
 };
 
 const sectionMotion = {
@@ -88,10 +103,27 @@ const SectionHeader = ({ step, icon, title, subtitle }) => (
 
 const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel = 'Save property' }) => {
   const [values, setValues] = React.useState({ ...defaultProperty, ...initialValues });
+  const [governorates, setGovernorates] = React.useState([]);
+  const [cities, setCities] = React.useState([]);
 
   React.useEffect(() => {
     setValues({ ...defaultProperty, ...initialValues });
   }, [initialValues]);
+
+  React.useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('sakny_auth_session') || '{}');
+    apiRequest('/v1/locations/governorates', { headers: buildAuthHeaders(session.token) })
+      .then(res => { if (res.data) setGovernorates(res.data); })
+      .catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    if (!values.governorateId) { setCities([]); return; }
+    const session = JSON.parse(localStorage.getItem('sakny_auth_session') || '{}');
+    apiRequest(`/v1/locations/governorates/${values.governorateId}/cities`, { headers: buildAuthHeaders(session.token) })
+      .then(res => { if (res.data) setCities(res.data); })
+      .catch(() => {});
+  }, [values.governorateId]);
 
   const updateField = (field, value) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -127,7 +159,7 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
     <form className="property-form" onSubmit={handleSubmit}>
       <motion.div className="property-form__sections" initial="initial" animate="animate" variants={{ animate: { transition: { staggerChildren: 0.08 } } }}>
 
-        {/* â”€â”€ Section 1: Listing Identity â”€â”€ */}
+        {/* â"€â"€ Section 1: Listing Identity â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
             <SectionHeader step="1" icon={<FileText size={15} />} title="Basic info" subtitle="Title and description for your listing" />
@@ -164,18 +196,24 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 2: Location â”€â”€ */}
+        {/* â"€â"€ Section 2: Location â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
             <SectionHeader step="2" icon={<MapPinned size={15} />} title="Location" subtitle="Address and nearby landmarks" />
             <div className="property-form__grid">
               <label className="property-field">
-                <span>City <em className="property-field__required">*</em></span>
-                <input value={values.city} onChange={(e) => updateField('city', e.target.value)} placeholder="New Cairo" required />
+                <span>Governorate <em className="property-field__required">*</em></span>
+                <select value={values.governorateId || ''} onChange={(e) => { updateField('governorateId', e.target.value); updateField('cityId', ''); }} required>
+                  <option value="">Select governorate</option>
+                  {governorates.map(g => <option key={g.id} value={g.id}>{g.nameEn}</option>)}
+                </select>
               </label>
               <label className="property-field">
-                <span>District / Neighbourhood <em className="property-field__required">*</em></span>
-                <input value={values.district} onChange={(e) => updateField('district', e.target.value)} placeholder="Fifth Settlement" required />
+                <span>City / District <em className="property-field__required">*</em></span>
+                <select value={values.cityId || ''} onChange={(e) => updateField('cityId', e.target.value)} required disabled={!values.governorateId}>
+                  <option value="">{values.governorateId ? 'Select city' : 'Select governorate first'}</option>
+                  {cities.map(c => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
+                </select>
               </label>
               <label className="property-field">
                 <span>Street address <em className="property-field__required">*</em></span>
@@ -197,7 +235,7 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 3: Property Details â”€â”€ */}
+        {/* â"€â"€ Section 3: Property Details â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
             <SectionHeader step="3" icon={<BedDouble size={15} />} title="Property details" subtitle="Rooms, size, and building info" />
@@ -268,7 +306,7 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 4: Pricing & Lease â”€â”€ */}
+        {/* â"€â"€ Section 4: Pricing & Lease â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
             <SectionHeader step="4" icon={<Wallet size={15} />} title="Price & lease" subtitle="Rent, deposit, and how long the lease runs" />
@@ -301,10 +339,63 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 5: Setup & Rules â”€â”€ */}
+        {/* â"€â"€ Section 5: Tenant Preferences â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
-            <SectionHeader step="5" icon={<SlidersHorizontal size={15} />} title="House rules" subtitle="What's included and what rules apply" />
+            <SectionHeader step="5" icon={<Users size={15} />} title="Tenant preferences" subtitle="Describe your ideal tenant for better matching" />
+            <div className="property-form__grid">
+              <label className="property-field">
+                <span>Gender preference</span>
+                <select value={values.prefTenantGender} onChange={(e) => updateField('prefTenantGender', e.target.value)}>
+                  {PREF_GENDER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Tenant type</span>
+                <select value={values.prefTenantType} onChange={(e) => updateField('prefTenantType', e.target.value)}>
+                  {PREF_TENANT_TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Smoking preference</span>
+                <select value={values.prefSmoking} onChange={(e) => updateField('prefSmoking', e.target.value)}>
+                  {PREF_SMOKING_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Pet preference</span>
+                <select value={values.prefPets} onChange={(e) => updateField('prefPets', e.target.value)}>
+                  {PREF_PETS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Sleep schedule</span>
+                <select value={values.prefSleepSchedule} onChange={(e) => updateField('prefSleepSchedule', e.target.value)}>
+                  {PREF_SLEEP_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Cleanliness level</span>
+                <select value={values.prefCleanliness} onChange={(e) => updateField('prefCleanliness', e.target.value)}>
+                  {PREF_CLEANLINESS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </label>
+              <label className="property-field">
+                <span>Minimum age</span>
+                <input type="number" min="18" max="99" value={values.prefMinAge} onChange={(e) => updateField('prefMinAge', e.target.value)} placeholder="e.g. 20" />
+              </label>
+              <label className="property-field">
+                <span>Maximum age</span>
+                <input type="number" min="18" max="99" value={values.prefMaxAge} onChange={(e) => updateField('prefMaxAge', e.target.value)} placeholder="e.g. 35" />
+              </label>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* â"€â"€ Section 6: Setup & Rules â"€â"€ */}
+        <motion.div variants={sectionMotion}>
+          <Card className="property-form__section">
+            <SectionHeader step="6" icon={<SlidersHorizontal size={15} />} title="House rules" subtitle="What's included and what rules apply" />
             <div className="property-form__toggles">
               {toggleFieldConfig.map((field) => (
                 <label className="property-toggle property-toggle--card" key={field.key}>
@@ -325,10 +416,10 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 6: Amenities â”€â”€ */}
+        {/* â"€â"€ Section 7: Amenities â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
-            <SectionHeader step="6" icon={<Tag size={15} />} title="Amenities" subtitle="Select everything that applies" />
+            <SectionHeader step="7" icon={<Tag size={15} />} title="Amenities" subtitle="Select everything that applies" />
             <div className="property-amenities">
               {PROPERTY_AMENITIES.map((amenity) => (
                 <button
@@ -344,26 +435,26 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 7: Images â”€â”€ */}
+        {/* â"€â"€ Section 8: Images â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
-            <SectionHeader step="7" icon={<ImageIcon size={15} />} title="Photos" subtitle="Add at least 5 photos for best results" />
+            <SectionHeader step="8" icon={<ImageIcon size={15} />} title="Photos" subtitle="Add at least 5 photos for best results" />
             <ImageUploader value={values.images} onChange={(images) => updateField('images', images)} />
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 8: Map â”€â”€ */}
+        {/* â"€â"€ Section 9: Map â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
-            <SectionHeader step="8" icon={<Navigation size={15} />} title="Map" subtitle="Drop a pin to mark the exact location" />
+            <SectionHeader step="9" icon={<Navigation size={15} />} title="Map" subtitle="Drop a pin to mark the exact location" />
             <MapPicker value={values.location} onChange={(location) => updateField('location', location)} />
           </Card>
         </motion.div>
 
-        {/* â”€â”€ Section 9: Contact â”€â”€ */}
+        {/* â"€â"€ Section 10: Contact â"€â"€ */}
         <motion.div variants={sectionMotion}>
           <Card className="property-form__section">
-            <SectionHeader step="9" icon={<Phone size={15} />} title="Contact" subtitle="How renters can reach you" />
+            <SectionHeader step="10" icon={<Phone size={15} />} title="Contact" subtitle="How renters can reach you" />
             <div className="property-form__grid">
               <label className="property-field">
                 <span>Contact phone number</span>

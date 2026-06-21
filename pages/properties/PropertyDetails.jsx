@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import {
   Bath, BedDouble, Building2, Banknote, Calendar, Check,
@@ -12,7 +12,8 @@ import PageTransition from '../../components/common/PageTransition';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-import propertyService from '../../services/propertyService';
+import { fetchProperty, fetchMyProperties, clearActiveProperty } from '../../slices/propertySlice';
+import { isLandlordUser } from '../../utils/userRole';
 
 const labelize = (v) => String(v || '').charAt(0).toUpperCase() + String(v || '').slice(1);
 
@@ -28,7 +29,7 @@ const formatDate = (dateStr) => {
 const statusVariantMap = { available: 'success', rented: 'danger', pending: 'warning' };
 
 const featureFlags = [
-  { key: 'furnished', label: 'Furnished', icon: <Layers size={14} /> },
+  { key: 'isFullyFurnished', label: 'Furnished', icon: <Layers size={14} /> },
   { key: 'utilitiesIncluded', label: 'Utilities included', icon: <Zap size={14} /> },
   { key: 'internetIncluded', label: 'Internet included', icon: <Wifi size={14} /> },
   { key: 'petsAllowed', label: 'Pets allowed', icon: <PawPrint size={14} /> },
@@ -39,38 +40,71 @@ const fade = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
 const PropertyDetails = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { id } = useParams();
-  const [property, setProperty] = React.useState(null);
+  const { activeProperty: property, detailLoading, error, myListings } = useSelector((state) => state.properties);
+  const { user } = useSelector((state) => state.auth);
   const [activeImage, setActiveImage] = React.useState(0);
 
   React.useEffect(() => {
-    propertyService.getById(id).then((item) => {
-      setProperty(item);
-      if (item) {
-        propertyService.incrementViews(id).then((updated) => {
-          if (updated) setProperty(updated);
-        });
-      }
-    });
-  }, [id]);
+    dispatch(fetchProperty(id));
+    if (isLandlordUser(user)) {
+      dispatch(fetchMyProperties());
+    }
+    return () => {
+      dispatch(clearActiveProperty());
+    };
+  }, [id, dispatch, user]);
 
-  const { user } = useSelector((state) => state.auth);
+  if (detailLoading) {
+    return (
+      <PageTransition>
+        <div className="property-details-page" style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-black" />
+        </div>
+      </PageTransition>
+    );
+  }
 
-  if (!property) return null;
+  if (error || !property) {
+    return (
+      <PageTransition>
+        <div className="property-details-page" style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <h2>{error || 'Property not found'}</h2>
+            <Button variant="primary" onClick={() => navigate('/properties')} style={{ marginTop: '1rem' }}>
+              Back to listings
+            </Button>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
 
-  const isOwner = user?.id === property.ownerId || user?.email === property.ownerId;
-
-  const activeGalleryImage = property.images?.[activeImage]
-    || property.images?.[0]
+  const images = (property.images || []).map((img) => img.imageUrl || img);
+  const isOwner = myListings.some((p) => p.id === property.id);
+  const activeGalleryImage = images[activeImage]
+    || images[0]
     || 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80';
 
   const activeFeatures = featureFlags.filter((f) => property[f.key]);
   const availableDate = formatDate(property.availableFrom);
+  const amenities = (property.amenities || []).map((a) => a.nameEn || a);
+  const location = property.latitude && property.longitude
+    ? { lat: Number(property.latitude), lng: Number(property.longitude) }
+    : null;
+
+  const ownerName = property.ownerName || 'Owner';
+  const ownerAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(ownerName)}&background=111827&color=ffffff`;
 
   const openChat = () => navigate('/messages', {
     state: {
       startConversation: {
-        participant: property.owner,
+        participant: {
+          id: property.ownerId,
+          name: ownerName,
+          avatar: ownerAvatar,
+        },
         propertyId: property.id,
         propertyTitle: property.title,
       },
@@ -81,10 +115,8 @@ const PropertyDetails = () => {
     <PageTransition>
       <div className="property-details-page">
 
-        {/* Gallery + Summary */}
         <div className="property-details-page__top">
 
-          {/* Gallery */}
           <motion.div className="property-gallery" {...fade} transition={{ duration: 0.35 }}>
             <div className="property-gallery__primary">
               <motion.img
@@ -96,9 +128,9 @@ const PropertyDetails = () => {
                 transition={{ duration: 0.28 }}
               />
             </div>
-            {property.images?.length > 1 && (
+            {images.length > 1 && (
               <div className="property-gallery__thumbs">
-                {property.images.map((image, index) => (
+                {images.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
@@ -112,95 +144,52 @@ const PropertyDetails = () => {
             )}
           </motion.div>
 
-          {/* Summary panel */}
           <motion.div
             className="property-details-page__summary"
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.38, delay: 0.08 }}
           >
-            {/* Badges row */}
             <div className="property-details-page__badges">
               <span className="property-details-page__price-tag">
-                EGP {property.price?.toLocaleString()}
+                EGP {Number(property.price)?.toLocaleString()}
                 <small> / {property.paymentPeriod || 'month'}</small>
               </span>
-              {property.status && (
-                <Badge variant={statusVariantMap[property.status] || 'neutral'}>
-                  {labelize(property.status)}
-                </Badge>
-              )}
-              {property.type && <Badge variant="neutral">{labelize(property.type)}</Badge>}
+              <Badge variant="success">Available</Badge>
+              {property.propertyType && <Badge variant="neutral">{labelize(property.propertyType)}</Badge>}
             </div>
 
             <h1>{property.title}</h1>
 
-            {(property.city || property.district) && (
+            {(property.city || property.governorate) && (
               <p className="property-details-page__location">
                 <MapPin size={15} />
                 <span>
-                  {property.district ? `${property.district}, ` : ''}
-                  {property.city}
-                  {property.address ? ` \u2014 ${property.address}` : ''}
+                  {property.city || property.governorate}
+                  {property.address ? ` — ${property.address}` : ''}
                 </span>
               </p>
             )}
 
-            {/* Facts chips */}
             <div className="property-details-page__facts">
-              {property.rooms ? (
-                <span><BedDouble size={14} /> {property.rooms} {property.rooms === 1 ? 'bedroom' : 'bedrooms'}</span>
+              {property.roomsCount ? (
+                <span><BedDouble size={14} /> {property.roomsCount} {property.roomsCount === 1 ? 'bedroom' : 'bedrooms'}</span>
               ) : null}
-              {property.bathrooms ? (
-                <span><Bath size={14} /> {property.bathrooms} {property.bathrooms === 1 ? 'bathroom' : 'bathrooms'}</span>
+              {property.bathroomsCount ? (
+                <span><Bath size={14} /> {property.bathroomsCount} {property.bathroomsCount === 1 ? 'bathroom' : 'bathrooms'}</span>
               ) : null}
-              {property.areaSqm ? <span><Maximize2 size={14} /> {property.areaSqm} m&sup2;</span> : null}
-              {property.floor ? (
-                <span>
-                  <Building2 size={14} />
-                  {' '}Floor {property.floor}{property.floorCount ? ` of ${property.floorCount}` : ''}
-                </span>
+              {property.floorNumber ? (
+                <span><Building2 size={14} /> Floor {property.floorNumber}</span>
               ) : null}
               {availableDate ? <span><Calendar size={14} /> From {availableDate}</span> : null}
             </div>
 
-            {/* Extra specs */}
-            {(property.finishingType || property.viewType || property.buildingAge || property.heatingType) && (
-              <div className="property-details-page__specs">
-                {property.finishingType && (
-                  <div className="property-details-page__spec">
-                    <span>Finishing</span>
-                    <strong>{labelize(property.finishingType)}</strong>
-                  </div>
-                )}
-                {property.viewType && (
-                  <div className="property-details-page__spec">
-                    <span>View</span>
-                    <strong>{labelize(property.viewType)}</strong>
-                  </div>
-                )}
-                {property.buildingAge && (
-                  <div className="property-details-page__spec">
-                    <span>Building age</span>
-                    <strong>{property.buildingAge}</strong>
-                  </div>
-                )}
-                {property.heatingType && (
-                  <div className="property-details-page__spec">
-                    <span>Cooling / Heat</span>
-                    <strong>{labelize(property.heatingType)}</strong>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Lease terms */}
             {(property.deposit || property.minimumStayMonths || property.maxOccupancy || (property.preferredTenant && property.preferredTenant !== 'any')) && (
               <div className="property-details-page__lease">
                 {property.deposit ? (
                   <div className="property-details-page__lease-item">
                     <Banknote size={14} />
-                    <span>Deposit: <strong>EGP {property.deposit.toLocaleString()}</strong></span>
+                    <span>Deposit: <strong>EGP {Number(property.deposit).toLocaleString()}</strong></span>
                   </div>
                 ) : null}
                 {property.minimumStayMonths ? (
@@ -224,7 +213,6 @@ const PropertyDetails = () => {
               </div>
             )}
 
-            {/* Feature flags */}
             {activeFeatures.length > 0 && (
               <div className="property-details-page__features">
                 {activeFeatures.map((f) => (
@@ -235,52 +223,33 @@ const PropertyDetails = () => {
               </div>
             )}
 
-            {/* Description */}
             {property.description && (
               <p className="property-details-page__desc">{property.description}</p>
             )}
 
-            {/* Amenities */}
-            {property.amenities?.length > 0 && (
+            {amenities.length > 0 && (
               <div className="property-details-page__amenities">
-                {property.amenities.map((amenity) => (
+                {amenities.map((amenity) => (
                   <span key={amenity}><Check size={13} /> {amenity}</span>
                 ))}
               </div>
             )}
 
-            {/* Nearby */}
-            {(property.nearbyLandmarks || property.nearbyTransport) && (
-              <div className="property-details-page__nearby">
-                {property.nearbyLandmarks && (
-                  <p><MapPin size={13} /> <strong>Nearby:</strong> {property.nearbyLandmarks}</p>
-                )}
-                {property.nearbyTransport && (
-                  <p><MapPin size={13} /> <strong>Transport:</strong> {property.nearbyTransport}</p>
-                )}
-              </div>
-            )}
-
-            {/* CTA */}
             <div className="property-details-page__cta">
-              <Button
-                variant="primary"
-                size="lg"
-                leading={<MessageSquareMore size={18} />}
-                onClick={openChat}
-              >
-                Contact Owner
-              </Button>
-              {property.contactPhone && (
-                <a className="property-details-page__phone" href={`tel:${property.contactPhone}`}>
-                  <Phone size={14} /> {property.contactPhone}
-                </a>
+              {!isOwner && (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  leading={<MessageSquareMore size={18} />}
+                  onClick={openChat}
+                >
+                  Contact Owner
+                </Button>
               )}
             </div>
           </motion.div>
         </div>
 
-        {/* Map + Owner */}
         <motion.div
           className="property-details-page__grid"
           {...fade}
@@ -291,19 +260,19 @@ const PropertyDetails = () => {
               <strong>Location</strong>
               <span>Explore the neighbourhood before reaching out.</span>
             </div>
-            {property.location?.lat && property.location?.lng ? (
-              <div className="property-map-card__map">
+            {location ? (
+              <div className="property-map-card__map" style={{ height: '280px', borderRadius: '12px', overflow: 'hidden' }}>
                 <MapContainer
-                  center={[property.location.lat, property.location.lng]}
+                  center={[location.lat, location.lng]}
                   zoom={14}
                   scrollWheelZoom={false}
                   style={{ height: '100%', width: '100%' }}
                 >
                   <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                   />
-                  <Marker position={[property.location.lat, property.location.lng]} />
+                  <Marker position={[location.lat, location.lng]} />
                 </MapContainer>
               </div>
             ) : (
@@ -319,31 +288,26 @@ const PropertyDetails = () => {
 
           <Card className="property-owner-card">
             <div className="property-owner-card__head">
-              <img src={property.owner.avatar} alt={property.owner.name} />
+              <img src={ownerAvatar} alt={ownerName} />
               <div>
-                <strong>{property.owner.name}</strong>
-                <span>{property.owner.responseTime}</span>
+                <strong>{ownerName}</strong>
+                <span>Property owner</span>
               </div>
             </div>
             <div className="property-owner-card__stats">
-              {isOwner && (
-                <>
-                  <div>
-                    <strong>{property.views}</strong>
-                    <span>Views</span>
-                  </div>
-                  <div>
-                    <strong>{property.messages}</strong>
-                    <span>Messages</span>
-                  </div>
-                </>
-              )}
               <div>
-                <strong>{property.owner.matchPercentage}%</strong>
-                <span>Response</span>
+                <strong>{labelize(property.propertyType || 'Property')}</strong>
+                <span>Type</span>
+              </div>
+              <div>
+                <strong>{property.roomsCount || '-'}</strong>
+                <span>Rooms</span>
+              </div>
+              <div>
+                <strong>{property.isFullyFurnished ? 'Yes' : 'No'}</strong>
+                <span>Furnished</span>
               </div>
             </div>
-            {/* Secondary chat button removed to avoid redundancy */}
           </Card>
         </motion.div>
 

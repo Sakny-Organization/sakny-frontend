@@ -6,6 +6,8 @@ import matchReducer from './slices/matchSlice';
 import messagesReducer from './slices/messagesSlice';
 import propertyReducer from './slices/propertySlice';
 import savedReducer from './slices/savedSlice';
+import landlordMatchReducer from './slices/landlordMatchSlice';
+import tenantPropertyMatchReducer from './slices/tenantPropertyMatchSlice';
 
 export const store = configureStore({
     reducer: {
@@ -16,5 +18,7 @@ export const store = configureStore({
         messages: messagesReducer,
         properties: propertyReducer,
         saved: savedReducer,
+        landlordMatch: landlordMatchReducer,
+        tenantPropertyMatch: tenantPropertyMatchReducer,
     },
 });

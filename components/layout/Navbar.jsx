@@ -4,11 +4,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../slices/authSlice';
 import { fetchUnreadCount } from '../../slices/notificationSlice';
 import Button from '../common/Button';
-import Avatar from '../common/Avatar';
-import { Menu, X, Bell, LogOut, Home, Search as SearchIcon, MessageCircle, Bookmark } from 'lucide-react';
+import { isLandlordUser } from '../../utils/userRole';
+import { Menu, X, Bell, LogOut, Home, Search as SearchIcon, MessageCircle, Bookmark, Building2, Plus } from 'lucide-react';
 const Navbar = () => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
-    const { saved } = useSelector((state) => state.roommates);
+    const savedIds = useSelector((state) => state.saved.ids);
     const { unreadCount: unreadNotifications } = useSelector((state) => state.notifications);
     const { unreadTotal: unreadMessages } = useSelector((state) => state.messages);
     const dispatch = useDispatch();
@@ -31,7 +31,6 @@ const Navbar = () => {
         if (path.includes('#')) {
             const [route, hash] = path.split('#');
             if (location.pathname === '/' || route === '') {
-                // Already on landing page, just scroll
                 setTimeout(() => {
                     const element = document.getElementById(hash);
                     if (element) {
@@ -40,7 +39,6 @@ const Navbar = () => {
                 }, 0);
             }
             else {
-                // Need to navigate to landing page first
                 navigate('/');
                 setTimeout(() => {
                     const element = document.getElementById(hash);
@@ -60,12 +58,20 @@ const Navbar = () => {
         { name: 'How it works', path: '/#how-it-works' },
         { name: 'Testimonials', path: '/#testimonials' },
     ];
-    const navLinks = [
+    const roommateNavLinks = [
         { name: 'Dashboard', path: '/dashboard', icon: <Home size={18}/> },
         { name: 'Find Roommates', path: '/search', icon: <SearchIcon size={18}/> },
+        { name: 'Explore Properties', path: '/explore-properties', icon: <Building2 size={18}/> },
         { name: 'Messages', path: '/messages', icon: <MessageCircle size={18}/> },
         { name: 'Saved', path: '/saved', icon: <Bookmark size={18}/> },
     ];
+    const landlordNavLinks = [
+        { name: 'My Listings', path: '/landlord/dashboard', icon: <Building2 size={18}/> },
+        { name: 'Add Property', path: '/landlord/properties/new', icon: <Plus size={18}/> },
+        { name: 'Explore', path: '/properties', icon: <SearchIcon size={18}/> },
+        { name: 'Messages', path: '/messages', icon: <MessageCircle size={18}/> },
+    ];
+    const navLinks = isLandlordUser(user) ? landlordNavLinks : roommateNavLinks;
     const isActive = (path) => location.pathname === path;
     
     return (
@@ -90,7 +96,7 @@ const Navbar = () => {
                 {navLinks.map((link) => {
                 const counts = {
                     '/messages': unreadMessages,
-                    '/saved': saved.length,
+                    '/saved': savedIds.length,
                 };
                 const count = counts[link.path] || 0;
                 return (<Link key={link.path} to={link.path} className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 relative px-3 py-1.5 rounded-lg hover:bg-gray-100/50 ${isActive(link.path)
@@ -120,14 +126,11 @@ const Navbar = () => {
 
                 <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
-                <Link to="/profile" className="flex items-center gap-3 pl-1 hover:opacity-80 transition-opacity">
-                  <Avatar
-                    src={user?.profilePhotoUrl}
-                    name={user?.name}
-                    size="md"
-                    showOnlineStatus={true}
-                    isOnline={true}
-                  />
+                <Link to="/profile" className="flex items-center gap-3 pl-1">
+                  <div className="relative">
+                    <img src={user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || "User") + "&background=random"} alt="Profile" className="h-9 w-9 rounded-full border border-gray-200 object-cover shadow-sm transition-transform hover:scale-105"/>
+                    <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
                   <span className="text-sm font-medium hidden sm:inline text-gray-700">{user?.name}</span>
                 </Link>
 
@@ -145,8 +148,8 @@ const Navbar = () => {
                 </Link>
               </div>)}
 
-            {/* Mobile menu button */}
-            <div className="flex items-center md:hidden">
+            {/* Mobile menu button - Only visible on mobile/tablet */}
+            <div className="hidden items-center md:hidden max-md:flex">
               <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-700 hover:text-black p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
               </button>
@@ -159,13 +162,7 @@ const Navbar = () => {
           <div className="bg-white/90 backdrop-blur-md border border-gray-200/60 rounded-2xl shadow-xl p-2 space-y-1">
             {isAuthenticated ? (<>
                 <Link to="/profile" className="px-4 py-3 border-b border-gray-100 flex items-center gap-3 mb-1 hover:bg-gray-50 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Avatar
-                    src={user?.profilePhotoUrl}
-                    name={user?.name}
-                    size="lg"
-                    showOnlineStatus={true}
-                    isOnline={true}
-                  />
+                  <img src={user?.profilePhotoUrl || user?.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || "User") + "&background=random"} alt="Profile" className="h-10 w-10 rounded-full border border-gray-200 object-cover"/>
                   <div>
                     <p className="text-sm font-bold text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email || 'User'}</p>

@@ -1,11 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Building2, LayoutDashboard, MessageSquare, PlusSquare, Settings } from 'lucide-react';
+import { Building2, LayoutDashboard, MessageSquare, PlusSquare, Settings, Users } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', to: '/landlord/dashboard', icon: <LayoutDashboard size={18} /> },
   { label: 'My Properties', to: '/landlord/properties', icon: <Building2 size={18} /> },
   { label: 'Add Property', to: '/landlord/properties/new', icon: <PlusSquare size={18} /> },
+  { label: 'Find Tenants', to: '/landlord/tenants', icon: <Users size={18} /> },
   { label: 'Messages', to: '/messages', icon: <MessageSquare size={18} /> },
   { label: 'Settings', to: '/profile', icon: <Settings size={18} /> },
 ];

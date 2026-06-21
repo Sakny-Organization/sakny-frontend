@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { MOCK_ROOMMATES } from '../data/mockData';
+
 const initialState = {
-    list: MOCK_ROOMMATES,
+    list: [],
     saved: [],
     filters: {
         location: '',

@@ -54,11 +54,18 @@ const Messages = () => {
         };
     }, [dispatch, token]);
 
-    // Handle startWith from navigation state (e.g., from MatchProfile)
+    // Handle startWith or startConversation from navigation state
     useEffect(() => {
         const startWith = location.state?.startWith;
+        const startConversation = location.state?.startConversation;
+
         if (startWith) {
             const userId = Number(startWith);
+            dispatch(setActiveConversation(userId));
+            dispatch(fetchMessages({ userId }));
+        } else if (startConversation?.participant) {
+            const participant = startConversation.participant;
+            const userId = Number(participant.id);
             dispatch(setActiveConversation(userId));
             dispatch(fetchMessages({ userId }));
         }
@@ -99,7 +106,11 @@ const Messages = () => {
         (conv.otherUserName || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const activeConversation = conversations.find(c => c.otherUserId === activeUserId);
+    const activeConversation = conversations.find(c => c.otherUserId === activeUserId)
+        || (activeUserId && location.state?.startConversation?.participant ? {
+            otherUserId: activeUserId,
+            otherUserName: location.state.startConversation.participant.name || 'User',
+        } : null);
 
     // Messages come sorted desc from API, reverse for chronological display
     const chronologicalMessages = [...messages].reverse();

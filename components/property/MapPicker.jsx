@@ -1,6 +1,6 @@
 import React from 'react';
 import L from 'leaflet';
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -20,7 +20,24 @@ const ClickHandler = ({ onChange }) => {
       onChange({ lat: event.latlng.lat, lng: event.latlng.lng });
     },
   });
+  return null;
+};
 
+const RecenterMap = ({ center }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (center) {
+      map.setView(center, 14, { animate: true });
+    }
+  }, [center, map]);
+  return null;
+};
+
+const InvalidateSize = () => {
+  const map = useMap();
+  React.useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [map]);
   return null;
 };
 
@@ -31,23 +48,34 @@ const MapPicker = ({ value, onChange }) => {
     <div className="property-map-card">
       <div className="property-map-card__header">
         <strong>Select property location</strong>
-        <span>Click anywhere on the map to drop a marker and save latitude and longitude.</span>
+        <span>Click anywhere on the map to drop a pin.</span>
       </div>
 
-      <div className="property-map-card__map">
-        <MapContainer center={center} zoom={value ? 13 : 11} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+      <div className="property-map-card__map" style={{ height: '400px', borderRadius: '12px', overflow: 'hidden' }}>
+        <MapContainer
+          center={center}
+          zoom={value ? 14 : 11}
+          scrollWheelZoom
+          style={{ height: '100%', width: '100%' }}
+        >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
           <ClickHandler onChange={onChange} />
-          {value?.lat && value?.lng ? <Marker position={[value.lat, value.lng]} /> : null}
+          <InvalidateSize />
+          {value?.lat && value?.lng && (
+            <>
+              <Marker position={[value.lat, value.lng]} />
+              <RecenterMap center={[value.lat, value.lng]} />
+            </>
+          )}
         </MapContainer>
       </div>
 
       <div className="property-map-card__meta">
-        <span>Latitude: {value?.lat ? value.lat.toFixed(5) : 'Not selected'}</span>
-        <span>Longitude: {value?.lng ? value.lng.toFixed(5) : 'Not selected'}</span>
+        <span>Lat: {value?.lat ? value.lat.toFixed(5) : '—'}</span>
+        <span>Lng: {value?.lng ? value.lng.toFixed(5) : '—'}</span>
       </div>
     </div>
   );

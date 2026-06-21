@@ -31,6 +31,14 @@ const mapFormToRequest = (values) => ({
   petsAllowed: Boolean(values.petsAllowed),
   smokingAllowed: Boolean(values.smokingAllowed),
   preferredTenant: values.preferredTenant || null,
+  prefTenantGender: values.prefTenantGender || null,
+  prefTenantType: values.prefTenantType || null,
+  prefSmoking: values.prefSmoking || null,
+  prefPets: values.prefPets || null,
+  prefSleepSchedule: values.prefSleepSchedule || null,
+  prefCleanliness: values.prefCleanliness || null,
+  prefMinAge: values.prefMinAge ? parseInt(values.prefMinAge) : null,
+  prefMaxAge: values.prefMaxAge ? parseInt(values.prefMaxAge) : null,
 });
 
 const EditProperty = () => {
@@ -62,9 +70,14 @@ const EditProperty = () => {
     bathrooms: activeProperty.bathroomsCount,
     floor: activeProperty.floorNumber,
     furnished: activeProperty.isFullyFurnished,
+    governorateId: activeProperty.governorateId || '',
+    cityId: activeProperty.cityId || '',
     city: activeProperty.city,
     amenities: (activeProperty.amenities || []).map((a) => a.nameEn || a),
     amenityIds: (activeProperty.amenities || []).map((a) => a.id).filter(Boolean),
+    location: activeProperty.latitude && activeProperty.longitude
+      ? { lat: Number(activeProperty.latitude), lng: Number(activeProperty.longitude) }
+      : null,
   };
 
   return (
