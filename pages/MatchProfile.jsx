@@ -57,7 +57,7 @@ const MatchProfile = () => {
     };
 
     const handleMessage = () => {
-        navigate('/messages', { state: { startConversation: { participant: { id, name: roommate?.name, profilePhotoUrl: roommate?.profilePhotoUrl } } } });
+        navigate('/messages', { state: { startConversation: { participant: { id, name: roommate?.name, profilePhotoUrl: roommate?.image } } } });
     };
 
     const handleBlock = async () => {
