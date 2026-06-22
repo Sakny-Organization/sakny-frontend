@@ -224,9 +224,13 @@ const Messages = () => {
                             >
                                 <ArrowLeft size={20} />
                             </button>
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-                                {(activeConversation?.otherUserName || '?')[0].toUpperCase()}
-                            </div>
+                            {activeConversation?.otherUserPhoto ? (
+                                <img src={activeConversation.otherUserPhoto} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                                    {(activeConversation?.otherUserName || '?')[0].toUpperCase()}
+                                </div>
+                            )}
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-bold text-black truncate">
                                     {activeConversation?.otherUserName || 'Conversation'}
