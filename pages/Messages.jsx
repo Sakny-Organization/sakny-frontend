@@ -131,7 +131,18 @@ const Messages = () => {
         return date.toLocaleDateString();
     };
 
-    const currentUserId = Number(user?.userId || user?.id);
+    const currentUserId = React.useMemo(() => {
+        if (user?.userId) return Number(user.userId);
+        if (user?.id) return Number(user.id);
+        // For landlords without a profile, infer ID from conversations:
+        // In a conversation with otherUserId X, any message where senderId != X is ours
+        if (conversations.length > 0 && messages.length > 0) {
+            const conv = conversations[0];
+            const msg = messages.find(m => Number(m.senderId) !== Number(conv.otherUserId));
+            if (msg) return Number(msg.senderId);
+        }
+        return null;
+    }, [user, conversations, messages]);
 
     if (!user) return null;
 

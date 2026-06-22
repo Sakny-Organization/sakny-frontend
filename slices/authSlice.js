@@ -50,6 +50,7 @@ export const loginUser = createAsyncThunk(
       let user = {
         email,
         name: email.split("@")[0] || "Sakny User",
+        ...(response.userId && { userId: response.userId }),
         ...(response.housingRole && { housingRole: response.housingRole }),
       };
 
