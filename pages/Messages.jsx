@@ -110,6 +110,7 @@ const Messages = () => {
         || (activeUserId && location.state?.startConversation?.participant ? {
             otherUserId: activeUserId,
             otherUserName: location.state.startConversation.participant.name || 'User',
+            otherUserPhoto: location.state.startConversation.participant.profilePhotoUrl || null,
         } : null);
 
     // Messages come sorted desc from API, reverse for chronological display

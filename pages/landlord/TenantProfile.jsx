@@ -22,7 +22,7 @@ const TenantProfile = () => {
   }, [dispatch, propertyId, userId]);
 
   const handleMessage = () => {
-    navigate('/messages', { state: { startWith: userId } });
+    navigate('/messages', { state: { startConversation: { participant: { id: userId, name: tenant?.name, profilePhotoUrl: tenant?.image } } } });
   };
 
   if (selectedStatus === 'loading') {
