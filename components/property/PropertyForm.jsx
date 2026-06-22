@@ -22,6 +22,7 @@ import {
   PREF_SLEEP_OPTIONS,
   PREF_CLEANLINESS_OPTIONS,
 } from '../../services/propertyService';
+import { governorates as localGovernorates, cities as localCities } from '../../data/egyptLocations';
 
 const defaultProperty = {
   title: '',
@@ -113,16 +114,16 @@ const PropertyForm = ({ initialValues, onSubmit, submitting = false, submitLabel
   React.useEffect(() => {
     const session = JSON.parse(localStorage.getItem('sakny_auth_session') || '{}');
     apiRequest('/v1/locations/governorates', { headers: buildAuthHeaders(session.token) })
-      .then(res => { if (res.data) setGovernorates(res.data); })
-      .catch(() => {});
+      .then(res => { if (res.data && res.data.length > 0) setGovernorates(res.data); else setGovernorates(localGovernorates); })
+      .catch(() => { setGovernorates(localGovernorates); });
   }, []);
 
   React.useEffect(() => {
     if (!values.governorateId) { setCities([]); return; }
     const session = JSON.parse(localStorage.getItem('sakny_auth_session') || '{}');
     apiRequest(`/v1/locations/governorates/${values.governorateId}/cities`, { headers: buildAuthHeaders(session.token) })
-      .then(res => { if (res.data) setCities(res.data); })
-      .catch(() => {});
+      .then(res => { if (res.data && res.data.length > 0) setCities(res.data); else setCities(localCities.filter(c => c.governorateId === values.governorateId)); })
+      .catch(() => { setCities(localCities.filter(c => c.governorateId === values.governorateId)); });
   }, [values.governorateId]);
 
   const updateField = (field, value) => {
