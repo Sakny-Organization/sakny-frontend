@@ -131,7 +131,7 @@ const Messages = () => {
         return date.toLocaleDateString();
     };
 
-    const currentUserId = user?.userId || user?.id;
+    const currentUserId = Number(user?.userId || user?.id);
 
     if (!user) return null;
 
