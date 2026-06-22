@@ -178,9 +178,13 @@ const Messages = () => {
                                 className={`w-full p-4 flex gap-3 transition-colors text-left border-b border-gray-100 last:border-0 hover:bg-gray-50 ${activeUserId === conversation.otherUserId ? 'bg-blue-50/50' : 'bg-white'}`}
                                 onClick={() => handleSelectConversation(conversation.otherUserId)}
                             >
-                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-gray-600 font-bold text-lg">
-                                    {(conversation.otherUserName || '?')[0].toUpperCase()}
-                                </div>
+                                {conversation.otherUserPhoto ? (
+                                    <img src={conversation.otherUserPhoto} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-gray-600 font-bold text-lg">
+                                        {(conversation.otherUserName || '?')[0].toUpperCase()}
+                                    </div>
+                                )}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
                                         <span className="font-semibold text-black truncate">
