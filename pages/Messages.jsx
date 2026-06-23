@@ -189,13 +189,16 @@ const Messages = () => {
                                 className={`w-full p-4 flex gap-3 transition-colors text-left border-b border-gray-100 last:border-0 hover:bg-gray-50 ${activeUserId === conversation.otherUserId ? 'bg-blue-50/50' : 'bg-white'}`}
                                 onClick={() => handleSelectConversation(conversation.otherUserId)}
                             >
-                                {conversation.otherUserPhoto ? (
-                                    <img src={conversation.otherUserPhoto} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-gray-600 font-bold text-lg">
-                                        {(conversation.otherUserName || '?')[0].toUpperCase()}
-                                    </div>
-                                )}
+                                <div className="relative flex-shrink-0">
+                                    {conversation.otherUserPhoto ? (
+                                        <img src={conversation.otherUserPhoto} alt="" className="w-12 h-12 rounded-full object-cover" />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
+                                            {(conversation.otherUserName || '?')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
                                         <span className="font-semibold text-black truncate">
@@ -239,17 +242,21 @@ const Messages = () => {
                             >
                                 <ArrowLeft size={20} />
                             </button>
-                            {activeConversation?.otherUserPhoto ? (
-                                <img src={activeConversation.otherUserPhoto} alt="" className="w-10 h-10 rounded-full object-cover" />
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-                                    {(activeConversation?.otherUserName || '?')[0].toUpperCase()}
-                                </div>
-                            )}
+                            <div className="relative">
+                                {activeConversation?.otherUserPhoto ? (
+                                    <img src={activeConversation.otherUserPhoto} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                                        {(activeConversation?.otherUserName || '?')[0].toUpperCase()}
+                                    </div>
+                                )}
+                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                            </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-bold text-black truncate">
                                     {activeConversation?.otherUserName || 'Conversation'}
                                 </h3>
+                                <p className="text-xs text-green-600 font-medium mt-0.5">Online</p>
                             </div>
                         </div>
 

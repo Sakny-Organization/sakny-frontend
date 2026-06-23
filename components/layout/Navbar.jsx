@@ -91,7 +91,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-8">
             {isAuthenticated ? (<>
                 {navLinks.map((link) => {
                 const counts = {
@@ -99,7 +99,7 @@ const Navbar = () => {
                     '/saved': savedIds.length,
                 };
                 const count = counts[link.path] || 0;
-                return (<Link key={link.path} to={link.path} className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 relative px-3 py-1.5 rounded-lg hover:bg-gray-100/50 ${isActive(link.path)
+                return (<Link key={link.path} to={link.path} className={`flex items-center gap-2 text-sm font-medium transition-all duration-200 relative px-3 py-1.5 rounded-lg hover:bg-gray-100/50 whitespace-nowrap ${isActive(link.path)
                         ? 'text-black bg-gray-50'
                         : 'text-gray-500 hover:text-black'}`}>
                       {link.icon}

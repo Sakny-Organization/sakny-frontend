@@ -2,20 +2,25 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import RoommateCard from '../components/cards/RoommateCard';
+import ProfileCompletionCard from '../components/cards/ProfileCompletionCard';
+import PropertyCard from '../components/property/PropertyCard';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition';
 import { Link } from 'react-router-dom';
 import { Search, BookmarkIcon, Building2, Loader } from 'lucide-react';
 import { containerVariants, itemVariants } from '../utils/animations';
 import { fetchRecommendations } from '../slices/matchSlice';
+import { fetchProperties } from '../slices/propertySlice';
 
 const Dashboard = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     const { recommendations, recommendationsStatus } = useSelector((state) => state.matches);
+    const { list: properties, loading: propertiesLoading } = useSelector((state) => state.properties);
 
     useEffect(() => {
         dispatch(fetchRecommendations(4));
+        dispatch(fetchProperties({ page: 0 }));
     }, [dispatch]);
 
     if (!user) return null;
@@ -32,13 +37,15 @@ const Dashboard = () => {
                         {greeting}, {user.name?.split(' ')[0] || 'there'}
                     </h1>
                     <p className="text-gray-600 text-lg">
-                        Here are your latest roommate matches
+                        Welcome back to your dashboard
                     </p>
                 </motion.div>
 
-                {/* Quick Actions */}
+                {/* Dashboard Grid */}
                 <motion.div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12" variants={containerVariants} initial="initial" animate="animate">
-                    <motion.div className="space-y-6" variants={itemVariants}>
+                    
+                    {/* Left Column: Quick Actions */}
+                    <motion.div className="space-y-6 lg:col-span-1" variants={itemVariants}>
                         <motion.div className="bg-white rounded-lg p-6 shadow-lg" whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>
                             <h3 className="text-xl font-bold text-black mb-4">Quick actions</h3>
                             <div className="space-y-3">
@@ -48,7 +55,7 @@ const Dashboard = () => {
                                         Find roommate
                                     </Button>
                                 </Link>
-                                <Link to="/explore-properties">
+                                <Link to="/properties">
                                     <Button variant="outline" fullWidth className="flex items-center justify-center gap-2">
                                         <Building2 size={18} />
                                         Explore properties
@@ -79,6 +86,38 @@ const Dashboard = () => {
                                     <span>Update your preferences regularly</span>
                                 </li>
                             </ul>
+                        </motion.div>
+                    </motion.div>
+
+                    {/* Right Column: Profile Progress & Properties */}
+                    <motion.div className="lg:col-span-2 space-y-6" variants={itemVariants}>
+                        <ProfileCompletionCard user={user} />
+                        
+                        <motion.div className="bg-white rounded-lg p-6 shadow-lg" whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold text-black">Latest Properties</h3>
+                                <Link to="/properties">
+                                    <Button variant="ghost" size="sm" className="text-sm">View all</Button>
+                                </Link>
+                            </div>
+                            
+                            {propertiesLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader size={24} className="animate-spin text-gray-400" />
+                                </div>
+                            ) : properties && properties.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {properties.slice(0, 2).map((property) => (
+                                        <div key={property.id} className="scale-95 origin-top-left w-[105%]">
+                                            <PropertyCard property={property} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-100">
+                                    <p className="text-gray-500 text-sm">No new properties listed recently.</p>
+                                </div>
+                            )}
                         </motion.div>
                     </motion.div>
                 </motion.div>

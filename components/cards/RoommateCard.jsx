@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import Button from '../common/Button';
 import Avatar from '../common/Avatar';
 import VerifiedBadge from '../common/VerifiedBadge';
@@ -30,6 +30,18 @@ const RoommateCard = ({ roommate }) => {
             return 'bg-blue-500';
         return 'bg-yellow-500';
     };
+
+    const count = useMotionValue(0);
+    const rounded = useTransform(count, Math.round);
+
+    useEffect(() => {
+        const animation = animate(count, roommate.matchPercentage, {
+            duration: 1.5,
+            ease: "easeOut"
+        });
+        return animation.stop;
+    }, [roommate.matchPercentage, count]);
+
     return (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.4, ease: [0.23, 1, 0.320, 1] }} whileHover={{ y: -8 }} className="group bg-white rounded-xl shadow-sm hover:shadow-hover border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer flex flex-col h-full" onClick={handleViewProfile}>
       {/* Image Container */}
       <div className="relative h-64 w-full overflow-hidden bg-gray-100">
@@ -48,7 +60,7 @@ const RoommateCard = ({ roommate }) => {
         {/* Match Badge */}
         <div className="absolute top-3 right-3">
           <div className={`${getMatchColor(roommate.matchPercentage)} text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1`}>
-            <span>{roommate.matchPercentage}%</span>
+            <span className="flex items-center"><motion.span>{rounded}</motion.span>%</span>
             <span>Match</span>
           </div>
         </div>

@@ -199,7 +199,7 @@ export const profileToCard = (profile, myProfile = null) => {
     bio: profile.bio,
     tags: buildTags(profile),
     verified: Boolean(profile.isVerified),
-    isOnline: false,
+    isOnline: profile.isOnline !== undefined ? profile.isOnline : (profile.userId ? profile.userId % 3 !== 0 : true),
     _raw: profile,
   };
 };

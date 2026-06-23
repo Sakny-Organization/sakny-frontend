@@ -18,11 +18,20 @@ const formatMessageTime = (timestamp) => new Date(timestamp).toLocaleTimeString(
 
 const ChatWindow = ({ conversation, onBack, onSend, isMobile }) => {
   const [draft, setDraft] = React.useState('');
+  const [prevId, setPrevId] = React.useState(conversation?.id);
+  const startRef = React.useRef(null);
   const endRef = React.useRef(null);
 
   React.useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [conversation?.messages?.length, conversation?.typing]);
+    if (conversation?.id !== prevId) {
+      // New conversation opened: stay at the top
+      startRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+      setPrevId(conversation?.id);
+    } else {
+      // Same conversation, new message or typing: scroll to bottom
+      endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [conversation?.id, conversation?.messages?.length, conversation?.typing]);
 
   React.useEffect(() => {
     setDraft('');
@@ -69,6 +78,7 @@ const ChatWindow = ({ conversation, onBack, onSend, isMobile }) => {
       </div>
 
       <motion.div className="chat-window__messages" variants={messageListVariants} initial="initial" animate="animate">
+        <div ref={startRef} />
         {conversation.messages.map((message) => {
           const isOwn = message.senderId === 'user';
           return (
